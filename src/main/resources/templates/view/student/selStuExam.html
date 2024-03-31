@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+
+</head>
+<body>
+<form th:each="s:${stu}" class="layui-form">
+    <input type="hidden" th:value="${s.sid}" th:name="sid">
+    <div class="layui-form-item" style="margin-top: 10px">
+        <label class="layui-form-label">学号：</label>
+        <div class="layui-input-inline">
+            <input name="username" class="layui-input" type="text"autocomplete="off" lay-verify="required" th:value="${s.stuid}" th:name="stuid" disabled>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">姓名：</label>
+        <div class="layui-input-inline">
+            <input name="username" class="layui-input" type="text"autocomplete="off" lay-verify="name" th:value="${s.sname}" th:name="sname" disabled>
+        </div>
+    </div>
+    <div class="layui-form-item" th:switch="${s.sgender}">
+        <label class="layui-form-label">性别：</label>
+        <div class="layui-input-block" th:case="'男'">
+            <input th:name="sgender" title="男" type="radio" checked="" value="男" disabled>
+            <input th:name="sgender" title="女" type="radio" value="女"disabled >
+        </div>
+        <div class="layui-input-block" th:case="'女'">
+            <input th:name="sgender" title="男" type="radio"  value="男" disabled>
+            <input th:name="sgender" title="女" type="radio" checked="" value="女" disabled>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">出生日期：</label>
+            <div class="layui-input-inline">
+                <input class="layui-input" id="test1" th:type="text"  th:value="${#dates.format(s.sbirthday,'yyyy-MM-dd')}" th:name="birthday" disabled>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">政治面貌：</label>
+        <div class="layui-input-block">
+            <select th:name="pid" lay-filter="aihao" disabled>
+                <option th:each="stu:${stupol}" th:value="${stu.pid}" th:text="${stu.pname}" th:selected="${s.pid==stu.pid}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">民族：</label>
+        <div class="layui-input-inline">
+            <input name="username" class="layui-input" type="text"autocomplete="off" lay-verify="required" th:value="${s.snation}" th:name="snation" disabled>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">身份证号：</label>
+        <div class="layui-input-inline">
+            <input name="username" class="layui-input" type="text"autocomplete="off" lay-verify="sidnumber" th:value="${s.scardid}" th:name="scardid" disabled>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">手机号码：</label>
+        <div class="layui-input-inline">
+            <input name="username" class="layui-input" type="text"autocomplete="off" lay-verify="sphone" th:value="${s.sphone}" th:name="sphone" disabled>
+        </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">地址：</label>
+        <div class="layui-input-block">
+            <textarea class="layui-textarea" th:text="${s.saddress}" th:name="saddress" disabled></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">班级：</label>
+        <div class="layui-input-block">
+            <select th:name="classid" lay-filter="aihao" disabled>
+                <option th:each="c:${cls}" th:value="${c.classid}" th:text="${c.classname}" th:selected="${s.classid==c.classid}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">状态：</label>
+        <div class="layui-input-block">
+            <select th:name="stustate" lay-filter="aihao" disabled>
+                <option th:selected="${s.stustate eq 0}" value="0" >注册学籍</option>
+                <option th:selected="${s.stustate eq 1}" value="1">保留学籍</option>
+                <option th:selected="${s.stustate eq 2}" value="2">已离校</option>
+            </select>
+        </div>
+    </div>
+
+
+</form>
+</body>
+</html>
+<script>
+    layui.use(['form', 'layer', 'laydate'], function(){
+        var form = layui.form
+            ,layer = layui.layer
+            ,laydate = layui.laydate,
+            $=layui.jquery;
+        //日期
+        //常规用法
+        laydate.render({
+            elem: '#test1',
+            trigger: 'click',
+        });
+
+        //  表单验证
+        form.verify({
+            name: function(value){
+                if($.trim(value).length<2){
+                    return '请按正确格式输入';
+                }
+            }
+            ,sidnumber: [
+                /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/
+                ,'请按正确格式填写信息'
+            ]
+            ,sphone: [
+                /^1[3456789]\d{9}$/
+                ,'请按正确格式填写信息'
+            ]
+        });
+
+        //监听提交
+        form.on('submit(ti)', function(data){
+            //data.field表单所有信息;
+            $.post("updateStudent",data.field,function(result)
+                {
+                    layer.msg(result.msg, {
+                        icon: 1,
+                        time: 1000 //2秒关闭（如果不配置，默认是3秒）
+                    }, function(){
+                        //刷新父页面
+                        var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                        parent.layer.close(index)
+                    });
+                }
+            );
+            return false;
+        });
+
+
+    });
+</script>

@@ -1,0 +1,103 @@
+* {
+    outline: 0;
+    padding: 0;
+    margin: 0;
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: #F3F6F8;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 6px;
+    background-color: #999999;
+}
+
+#title {
+    display: block;
+    width: 100%;
+    height: 30px;
+    background-color: #303030;
+    overflow: hidden;
+}
+
+#title span {
+    display: block;
+    width: auto;
+    height: 30px;
+    line-height: 30px;
+    color: #e5e5e5;
+    font-size: 0.9em;
+    float: left;
+}
+
+#welcome {
+    margin-left: 50px;
+}
+
+#toptime {
+    margin-left: 10px;
+}
+
+#logobg {
+    display: block;
+    width: 100%;
+    height: 130px;
+    background-image: url('../img/logo_bg.jpg');
+    background-position: 30% 0;
+}
+
+#logo {
+    display: block;
+    width: 100%;
+    height: 130px;
+    background-image: url('../img/logo.png');
+    background-position: 0 20px;
+    background-repeat: no-repeat;
+}
+
+.layui-card {
+    margin: 5px;
+    scroll-behavior: smooth;
+    box-shadow: #e0e0e0 0 0 5px;
+}
+.layui-card-header{
+    background-color: cornflowerblue;
+    color: #ffffff;
+}
+#totop{
+    display: block;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: rgba(0,0,0,0.5);
+    cursor: pointer;
+    z-index: 999;
+}
+#totop:hover{
+    background-color: rgba(0,0,0,0.3);
+}
+#totop i{
+    display: block;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    color: #ffffff;
+    text-align: center;
+    font-size: 2em;
+}
+#scheduleTable{
+    padding: 0;
+}
+#scheduleTable table{
+    margin: 0;
+}

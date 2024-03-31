@@ -1,0 +1,100 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.StudentMapper">
+    <!-- 查询所有学生信息 -->
+    <select id="selStudent" resultType="map" parameterType="map">
+        select * from student s
+        left join classinfo c on s.classid = c.classid
+        left join politics_type p on s.pid = p.pid
+        left join grade g on c.gid = g.gid
+        left join major m on g.mid = m.mid
+        left join department d on m.did = d.did
+        <where>s.is_del = 0
+            <if test="stuid!=null and stuid!=''">
+                and s.stuid like concat('%',concat(#{stuid},'%'))
+            </if>
+            <if test="sname!=null and sname!=''">
+                and s.sname like concat('%',concat(#{sname},'%'))
+            </if>
+            <if test="did!=null and did!=''">
+                and d.did = #{did}
+            </if>
+            <if test="mid!=null and mid!=''">
+                and m.mid = #{mid}
+            </if>
+            <if test="gid!=null and gid!=''">
+                and g.gid = #{gid}
+            </if>
+            <if test="classid!=null and classid!=''">
+                and c.classid = #{classid}
+            </if>
+        </where> ORDER BY s.sid desc LIMIT #{begin},#{end}
+    </select>
+    <!-- 查询学生信息数量 -->
+    <select id="selCount" resultType="int">
+        select count(*) from student s
+        left join classinfo c on s.classid = c.classid
+        left join politics_type p on s.pid = p.pid
+        left join grade g on c.gid = g.gid
+        left join major m on g.mid = m.mid
+        left join department d on m.did = d.did
+        <where>s.is_del = 0
+            <if test="stuid!=null and stuid!=''">
+                and s.stuid like concat('%',concat(#{stuid},'%'))
+            </if>
+            <if test="sname!=null and sname!=''">
+                and s.sname like concat('%',concat(#{sname},'%'))
+            </if>
+            <if test="did!=null and did!=''">
+                and d.did = #{did}
+            </if>
+            <if test="mid!=null and mid!=''">
+                and m.mid = #{mid}
+            </if>
+            <if test="gid!=null and gid!=''">
+                and g.gid = #{gid}
+            </if>
+            <if test="classid!=null and classid!=''">
+                and c.classid = #{classid}
+            </if>
+        </where> ORDER BY s.sid desc
+    </select>
+
+    <!-- 根据学生id查询学生信息 -->
+    <select id="selStudentId" resultType="StudentDB">
+        select * from student where sid = #{sid}
+    </select>
+    <!-- 查询班级 -->
+    <select id="selClass" resultType="ClassinfoDB">
+        select * from classinfo
+    </select>
+    <!-- 查询政治面貌表 -->
+    <select id="selPolitics" resultType="PoliticsTypeDB">
+      select * from politics_type
+    </select>
+    <!-- 修改学生信息 -->
+    <update id="updateStudent" parameterType="StudentDB">
+       update student set sname=#{sname},sgender=#{sgender},sbirthday=#{sbirthday},pid=#{pid},snation=#{snation},scardid=#{scardid},
+       sphone=#{sphone},saddress=#{saddress},stustate=#{stustate},classid=#{classid} where sid=#{sid}
+    </update>
+
+    <!-- 查询系部 -->
+    <select id="selDepartment" resultType="DepartmentDB">
+      select * from department
+    </select>
+
+    <!-- 根据系部查询专业 -->
+    <select id="selMajorDB" resultType="MajorDB">
+        select * from major where did = #{did}
+    </select>
+    <!-- 根据专业查询年级 -->
+    <select id="selGradeDB" resultType="GradeDB">
+        select * from grade where mid = #{mid}
+    </select>
+    <!-- 根据年级查询班级 -->
+    <select id="selClassinfoDB" resultType="ClassinfoDB">
+        select * from classinfo where gid = #{gid}
+    </select>
+</mapper>

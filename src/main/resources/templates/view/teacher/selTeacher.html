@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>教师查询</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+</head>
+<body>
+        教师编号：
+            <div class="layui-inline">
+                <input class="layui-input" name="tchid" id="demoReload" autocomplete="off">
+            </div>
+        教师姓名：
+            <div class="layui-inline">
+                <input class="layui-input" name="tname" id="demoReload1" autocomplete="off">
+            </div>
+    <button class="layui-btn" data-type="reload" id="searchBtn1">开始搜索</button>
+        <button class="layui-btn" data-type="reload" id="searchBtn2">取消搜索</button>
+    <table class="layui-hide" id="demo" lay-filter="test"></table>
+    <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-xs" lay-event="sel">查看</a>
+    </script>
+
+
+</div>
+
+<script>
+    layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider', 'jquery', 'form'], function() {
+        var laydate = layui.laydate ,//日期
+            laypage = layui.laypage, //分页
+            layer = layui.layer, //弹层
+            table = layui.table, //表格
+            carousel = layui.carousel, //轮播
+            upload = layui.upload, //上传
+            element = layui.element, //元素操作
+            slider = layui.slider,//滑块
+            form = layui.form;
+
+        //执行一个 table 实例
+        table.render({
+            elem: '#demo'
+            ,height: 550
+            ,url: 'selTeacher' //数据接口
+            ,title: '教师信息表'
+            ,page: true //开启分页
+            ,limits:[5,10,15]
+
+            ,cols: [
+                [ //表头
+                    //{field: 'tid', title: '编号'}
+                    {field: 'tchid', title: '教师工号'}
+                    ,{field: 'tname', title: '姓名'}
+                    ,{field: 'tgender', title: '性别'}
+                    //,{field: 'tbirthday', title: '出生日期',templet:"<div>{{layui.util.toDateString(d.tbirthday, 'yyyy年MM月dd日')}}</div>"}
+                   // ,{field: 'pname', title: '政治面貌'}
+                   // ,{field: 'tnation', title: '民族'}
+                   // ,{field: 'tcardid', title: '身份证号'}
+                    //,{field: 'tphone', title: '手机号码'}
+                    //,{field: 'taddress', title: '地址'}
+                    ,{field: 'entertime', title: '入职时间'}
+                    ,{field: 'tchstate', title: '状态'}
+                    ,{fixed: 'right',title:'操作', width: 165, align:'center', toolbar: '#barDemo'}
+
+                ]
+            ]
+            , id: 'selTeacher',
+            done: function (res, curr, count) {
+                $("[data-field='tchstate']").children().each(function () {
+                    if ($(this).text() == 0) {
+                        $(this).text("在职")
+                    }
+                    if($(this).text() == 1){
+                        $(this).text("离职")
+                    }
+                    if($(this).text() == 2){
+                        $(this).text("休假")
+                    }
+                });
+            }
+        });
+
+
+        //监听行工具事件
+        table.on('tool(test)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+            var data = obj.data //获得当前行数据
+                ,layEvent = obj.event; //获得 lay-event 对应的值
+            //修改
+            if(layEvent === 'edit'){
+                top.layer.open({
+                    type: 2, //layer的5种层类型   0（信息框，默认）1（页面层）2（iframe层）3（加载层）4（tips层）
+                    title: ['修改教师信息', 'font-size:18px;'],  //弹出框标题
+                    shade: [0.5, '#393D49'],     //遮罩层
+                    shadeClose:true,          //点击遮罩层外区域关闭遮罩层
+                    area: ['580px', '500px'],    //弹出框大小
+                    anim: 1,              //弹出动画
+                    content:'selTeacherId?id='+data.tid
+                });
+            }
+            //  查看详情
+            if(layEvent === 'sel'){
+                top.layer.open({
+                    type: 2, //layer的5种层类型   0（信息框，默认）1（页面层）2（iframe层）3（加载层）4（tips层）
+                    title: ['教师信息', 'font-size:18px;'],  //弹出框标题
+                    shade: [0.5, '#393D49'],     //遮罩层
+                    shadeClose:true,          //点击遮罩层外区域关闭遮罩层
+                    area: ['800px', '500px'],   //弹出框大小
+                    anim: 1,              //弹出动画
+                    content:'selectTeaMessage?id='+data.tid,
+                });
+            }
+
+        });
+
+        //分页
+        laypage.render({
+            elem: 'pageDemo' //分页容器的id
+            ,count: 100 //总页数
+            ,skin: '#1E9FFF' //自定义选中色值
+            //,skip: true //开启跳页
+            ,jump: function(obj, first){
+                if(!first){
+                    layer.msg('第'+ obj.curr +'页', {offset: 'b'});
+                }
+            }
+        });
+
+        //执行条件查询
+        /*条件查询按钮*/
+        //  按姓名查询
+        var $ = layui.$;
+        $('#searchBtn1').on('click', function(){
+            //获取输入框
+            var tchid = $('#demoReload');
+            var tname = $('#demoReload1');
+            //执行重载
+            table.reload('selTeacher', {
+                page: {
+                    curr: 1 //重新从第 1 页开始selTeacher
+                }
+                ,where: {
+                    tchid: tchid.val(),
+                    tname: tname.val()
+                }
+            });
+        });
+
+        //  取消搜索
+        var $ = layui.$;
+        $('#searchBtn2').on('click', function(){
+            window.location.reload();
+        });
+
+    });
+</script>
+</body>
+</html>

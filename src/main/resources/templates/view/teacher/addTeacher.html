@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>教师录入</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <script type="text/javascript" th:src="@{/static/js/xlsx.full.min.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}" />
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <script type="text/javascript" th:src="@{/static/js/xlsx.full.min.js}"></script>
+</head>
+<style>
+    .layui-form-item {
+        margin: 5px;
+    }
+
+    blockquote {
+        margin: 5px 20px;
+    }
+</style>
+
+<body>
+<form class="layui-form layui-form-pane" th:method="post">
+    <fieldset class="layui-elem-field layui-field-title">
+        <legend>教师基本信息</legend>
+    </fieldset>
+    <div class="layui-row">
+        <div class="layui-col-xs12">
+            <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">姓名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="username" th:name="tname" lay-verify="required" placeholder="请输入"
+                               autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">政治面貌</label>
+                    <div class="layui-input-block">
+                        <select name="quiz1" th:name="pid" lay-search>
+                            <option th:each="stu:${stupol}" th:value="${stu.pid}" th:text="${stu.pname}"></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">民族</label>
+                    <div class="layui-input-block">
+                        <select name="quiz1" th:name="tnation" id="minzu" lay-search>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">验证身份证</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="identity" id="tcardid" th:name="tcardid" lay-verify="identity"
+                               placeholder="" autocomplete="off" class="layui-input" onkeyup="setInfo(this.value)">
+                    </div>
+                    <input type="hidden" id="view2">
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-xs12">
+            <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                <div class="layui-form-item" pane="">
+                    <label class="layui-form-label">性别</label>
+                    <div class="layui-input-block">
+                        <input type="radio" th:name="tgender" value="男" title="男" id="radio1" checked>
+                        <input type="radio" th:name="tgender" value="女" title="女" id="radio2">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">出生日期</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="date" th:name="birthday" lay-verify="date" autocomplete="off"
+                               class="layui-input" id="view" readonly="readonly">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">验证手机</label>
+                    <div class="layui-input-block">
+                        <input type="tel" name="phone" th:name="tphone" lay-verify="phone" autocomplete="off"
+                               class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs12 layui-col-sm6 layui-col-md3">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">入职时间</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="date" th:name="tertime" id="date1" lay-verify="date1"
+                               autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-xs12">
+            <div class="layui-form-item layui-form-text">
+                <label class="layui-form-label">家庭住址</label>
+                <div class="layui-input-block">
+                        <textarea placeholder="请输入内容" th:name="taddress" class="layui-textarea"
+                                  lay-verify="address"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-form-item" style="width: 350px;float: right;margin: 20px 5px;">
+        <button type="button" class="layui-btn" lay-filter="demo1" id="demo1" lay-submit>立即提交</button>
+        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+    </div>
+
+
+
+</form>
+
+
+<script>
+    function setInfo(idCard) {
+        document.getElementById('view').value = getBirth(idCard);
+        document.getElementById('view2').value = getSex(idCard);
+    }
+    function getBirth(idCard) {
+        var birthday = "";
+        if (idCard != null && idCard != "") {
+            if (idCard.length == 15) {
+                birthday = "19" + idCard.slice(6, 12);
+            } else if (idCard.length == 18) {
+                birthday = idCard.slice(6, 14);
+            }
+            birthday = birthday.replace(/(.{4})(.{2})/, "$1-$2-");
+            //通过正则表达式来指定输出格式为:1990-01-01
+        }
+        return birthday;
+    }
+    function getSex(idCard) {
+        var sexStr = '';
+        if (parseInt(idCard.slice(-2, -1)) % 2 == 1) {
+            sexStr = '男';
+
+        }
+        else {
+            sexStr = '女';
+        }
+        return sexStr;
+    }
+
+    layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider', 'jquery', 'form'], function () {
+        var laydate = layui.laydate,//日期
+            laypage = layui.laypage, //分页
+            layer = layui.layer, //弹层
+            table = layui.table, //表格
+            carousel = layui.carousel, //轮播
+            upload = layui.upload, //上传
+            element = layui.element, //元素操作
+            slider = layui.slider,//滑块
+            form = layui.form;
+        element.on('tab(demo)', function (data) {
+            layer.tips('切换了 ' + data.index + '：' + this.innerHTML, this, {
+                tips: 1
+            });
+        });
+
+        layui.$("#tcardid").on('blur', function () {
+            var gender = layui.$("#view2").val();
+            if (gender == '男') {
+                $("#radio1").trigger("click");
+            } else {
+                $("#radio2").trigger("click");
+            }
+            form.render();
+        });
+
+        var mz = new Array('汉族', '蒙古族', '回族', '藏族', '维吾尔族', '苗族', '彝族', '壮族', '布依族', '朝鲜族', '满族', '侗族', '瑶族', '白族', '土家族', '哈尼族', '哈萨克族', '傣族', '黎族', '僳僳族', '佤族', '畲族', '高山族', '拉祜族', '水族', '东乡族', '纳西族', '景颇族', '柯尔克孜族', '土族', '达斡尔族', '仫佬族', '羌族', '布朗族', '撒拉族', '毛南族', '仡佬族', '锡伯族', '阿昌族', '普米族', '塔吉克族', '怒族', '乌孜别克族', '俄罗斯族', '鄂温克族', '德昂族', '保安族', '裕固族', '京族', '塔塔尔族', '独龙族', '鄂伦春族', '赫哲族', '门巴族', '珞巴族', '基诺族');
+        for (const index in mz) {
+            document.getElementById("minzu").innerHTML += '<option value="' + mz[index] + '">' + mz[index] + '</option>';
+        };
+        form.render();
+        //日期
+        laydate.render({
+            elem: '#date',
+            trigger: 'click',
+        });
+        laydate.render({
+            elem: '#date1',
+            trigger: 'click',
+        });
+        //  表单验证
+        form.verify({
+            name: function (value) {
+                if ($.trim(value).length < 2) {
+                    return '请按正确格式输入';
+                }
+            }
+            , date: [
+                /^[\s\S]*.*[^\s][\s\S]*$/
+                , '请按正确格式填写信息'
+            ]
+            , date1: [
+                /^[\s\S]*.*[^\s][\s\S]*$/
+                , '请按正确格式填写信息'
+            ]
+            , snation: [
+                /^[\s\S]*.*[^\s][\s\S]*$/
+                , '请按正确格式填写信息'
+            ]
+            , address: [
+                /^[\s\S]*.*[^\s][\s\S]*$/
+                , '请按正确格式填写信息'
+            ]
+            , identity: [
+                /^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/
+                , '请按正确格式填写信息'
+            ]
+            , phone: [
+                /^1([38][0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|9[89])\d{8}$/
+                , '请按正确格式填写信息'
+            ]
+        });
+
+
+        var $ = layui.$;
+        //  提交
+        $("#demo1").on('click', function () {
+            var layuiLoad = layer.load(1);
+            $.ajax({
+                type: 'post',
+                url: "addTeacher",
+                dataType: 'json',
+                data: layui.$('form').serialize(),
+                success: function (result) {
+                    var data = result.data;
+                    var nickName;
+                    var tel;
+                    var loginName;
+                    var adminUser = true;
+                    var locked = false;
+                    var roleLists = result.msg;
+                    var idnum;
+                    $.each(data, function (index, obj) {
+                        nickName = obj.tname;
+                        tel = obj.tphone;
+                        loginName = obj.tchid;
+                        idnum = obj.tcardid;
+                    });
+                    var password = idnum.substring(idnum.length - 6);
+
+                    var user = {
+                        "loginName": loginName,
+                        "nickName": nickName,
+                        "tel": tel,
+                        "adminUser": adminUser,
+                        "locked": locked,
+                        "roleLists": {},
+                        "password": password
+                    }
+                    var selectRole = [];
+                    selectRole.push({ "id": roleLists });
+                    user.roleLists = selectRole;
+                    $.ajax({
+                        type: 'post',
+                        url: "/admin/system/user/add",
+                        dataType: "json",
+                        contentType: "application/json;charset=UTF-8",
+                        data: JSON.stringify(user),
+                        success: function (data) {
+                            layer.close(layuiLoad);
+                            if (data) {
+                                layer.msg(
+                                    "添加成功", {
+                                        icon: 1,
+                                        time: 1000 //2秒关闭（如果不配置，默认是3秒）
+                                        , end: function () {
+                                            window.location.reload();
+                                        }
+                                    });
+                            } else {
+                                layer.msg(
+                                    "添加失败", {
+                                        icon: 1,
+                                        time: 1000 //2秒关闭（如果不配置，默认是3秒）
+                                        , end: function () {
+                                            window.location.reload();
+                                        }
+                                    });
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+    });
+</script>
+</body>
+
+</html>

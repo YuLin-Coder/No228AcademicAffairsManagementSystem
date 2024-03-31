@@ -1,0 +1,37 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.courseMapperl">
+    <select id="selCourse" resultType="com.yuanlrc.school.entity.coursel">
+        SELECT c.*, c.is_del isdel, o.ctname ctname,m.mname mname FROM course c,course_type o,major m WHERE o.ctid=c.ctid and m.mid=c.mid
+            <if test="cname!=null and cname!=''">
+              and  cname like concat('%' ,concat(#{cname},'%'))
+            </if>
+
+    </select>
+    <select id="selJson" resultType="com.yuanlrc.school.entity.MajorDB">
+       select * from major
+
+    </select>
+    <select id="selCoutu" resultType="com.yuanlrc.school.entity.CourseTypeDB">
+       select * from course_type
+
+    </select>
+    <update id="update" parameterType="com.yuanlrc.school.entity.coursel">
+         update course set cname=#{cname},ccredit=#{ccredit},cperiod=#{cperiod},cstate=#{cstate},cselcount=#{cselcount},cmaxcount=#{cmaxcount},studytype=#{studytype},ctid=#{ctid},mid=#{mid} where cid=#{cid}
+    </update>
+    <insert id="addcou" parameterType="com.yuanlrc.school.entity.coursel">
+       insert into course (cname,ccredit,cperiod,cstate,cselcount,cmaxcount,studytype,ctid,mid,is_del)values(#{cname},#{ccredit},#{cperiod},#{cstate},0,#{cmaxcount},#{studytype},#{ctid},#{mid},0)
+    </insert>
+    <update id="delcou" parameterType="Integer">
+       update course set is_del=1 where cid=#{cid}
+    </update>
+    <update id="hfcou" parameterType="Integer">
+       update course set is_del=0 where cid=#{cid}
+    </update>
+    <select id="delercou" resultType="Integer">
+        select cselcount from course where cid=#{cid}
+    </select>
+
+</mapper>

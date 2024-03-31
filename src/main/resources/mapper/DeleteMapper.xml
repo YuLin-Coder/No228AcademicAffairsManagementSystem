@@ -1,0 +1,76 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.DeleteMapper">
+    <!-- 删除学生信息 -->
+    <update id="deleteStudent" parameterType="String">
+      update student set is_del=1,leavetime=now(),stustate=2 where stuid = #{stuid}
+    </update>
+
+    <!-- 删除学生选课信息 -->
+    <update id="deleteStuCourse" parameterType="String">
+      update stu_course set is_del=1 where sid=(select sid from student where stuid = #{stuid})
+    </update>
+
+    <!-- 删除学生成绩表信息 -->
+    <update id="deleteStuExam" parameterType="String">
+      update stu_exam set is_del=1 where sid=(select sid from student where stuid = #{stuid})
+    </update>
+
+    <!-- 删除教评记录表信息 -->
+    <update id="deleteEvaluateRecord" parameterType="String">
+      update evaluate_record set is_del=1 where stuid = #{stuid}
+    </update>
+
+    <!-- 班级表人数-1 -->
+    <update id="deleteClassinfo" parameterType="String">
+      update classinfo set ccount=ccount-1 where classid = (select classid from student where stuid = #{stuid})
+    </update>
+
+    <!-- 年级人数-1 -->
+    <update id="deleteGrade" parameterType="String">
+      update grade set gcount=gcount-1 where gid = (select gid from classinfo where classid=(select classid from student where stuid = #{stuid}))
+    </update>
+
+    <!-- 专业人数-1 -->
+    <update id="deleteMajor" parameterType="String">
+      update major set mcount=mcount-1 where mid = (select mid from grade where gid=(select gid from classinfo where classid=(select classid from student where stuid = #{stuid})))
+    </update>
+
+    <!-- 系部人数-1 -->
+    <update id="deleteDepartment" parameterType="String">
+      update department set dcount=dcount-1 where did = (select did from major where mid = (select mid from grade where gid=(select gid from classinfo where classid=(select classid from student where stuid = #{stuid}))))
+    </update>
+
+    <!-- 修改教师为离职状态并逻辑删除 -->
+    <update id="deleteTeacher" parameterType="TeacherDB">
+        update teacher set tname=#{tname},tgender=#{tgender},tbirthday=#{tbirthday},pid=#{pid},tnation=#{tnation},tphone=#{tphone},taddress=#{taddress}, leavetime=now(),tchstate=1,is_del=1 where tid =  #{tid}
+    </update>
+    <!-- 删除教师授课信息 -->
+    <update id="deleteTchCourse" parameterType="int">
+      update tch_course set is_del=1 where tid=#{tid}
+    </update>
+    <!-- 删除教师班级信息 -->
+    <update id="deleteTchClass" parameterType="int">
+      update tch_class set is_del=1 where tid=#{tid}
+    </update>
+    <!-- 删除教师成绩信息 -->
+    <update id="deleteTchExam" parameterType="int">
+      update tch_exam set is_del=1 where tid=#{tid}
+    </update>
+    <!-- 删除教评记录信息 -->
+    <update id="deleteTeaRecord" parameterType="int">
+      update evaluate_record set is_del=1 where tchid=(select tchid from teacher where tid = #{tid})
+    </update>
+
+    <!-- 改用户登录状态改为（1）锁定状态 -->
+    <update id="deleteUser" parameterType="String">
+      update sys_user set locked = 1 where login_name=#{login_name}
+    </update>
+
+    <!-- 将学生添加至dropout退学信息表 -->
+    <insert id="insertDropout" parameterType="String">
+        insert into dropout (drreason,sid) values(#{param2},(select sid from student where stuid = #{param1}))
+    </insert>
+</mapper>

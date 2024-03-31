@@ -1,0 +1,30 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.DropoutMapper">
+   <!-- 查询所有退学信息 -->
+    <select id="selDropout" resultType="map" parameterType="map">
+        select * from dropout d left join student s on d.sid = s.sid
+        <where>
+            <if test="stuid!=null and stuid!=''">
+                and s.stuid like concat('%',concat(#{stuid},'%'))
+            </if>
+            <if test="sname!=null and sname!=''">
+                and s.sname like concat('%',concat(#{sname},'%'))
+            </if>
+        </where> order by d.drid desc LIMIT #{begin},#{end}
+    </select>
+    <!-- 查询所有信息数量 -->
+    <select id="selDropoutCount" resultType="int">
+        select count(*) from dropout d left join student s on d.sid = s.sid
+        <where>
+            <if test="stuid!=null and stuid!=''">
+                and s.stuid like concat('%',concat(#{stuid},'%'))
+            </if>
+            <if test="sname!=null and sname!=''">
+                and s.sname like concat('%',concat(#{sname},'%'))
+            </if>
+        </where> order by d.drid desc
+    </select>
+</mapper>

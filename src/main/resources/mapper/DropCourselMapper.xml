@@ -1,0 +1,20 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.DropCourseMapper">
+    <select id="seledCourse" parameterType="Integer" resultType="com.yuanlrc.school.entity.coursel">
+        select DISTINCT c.*,o.ctname ctname,m.mname mname,if((se.sumexam)>0,se.sumexam,'0') score  from stu_course sc LEFT JOIN course c on c.cid=sc.cid and sc.sid=#{sid} LEFT JOIN
+        course_type o on o.ctid=c.ctid LEFT JOIN  major m on m.mid=c.mid left join stu_exam se on se.scid=sc.scid where  sc.sid=#{sid} and if((se.sumexam)>0,se.sumexam,'0')=0 and c.studytype='选修'
+        <if test="cname!=null and cname!=''">
+            and  cname like concat('%' ,concat(#{cname},'%'))
+        </if>
+
+    </select>
+    <delete id="dropcou" parameterType="Integer">
+        delete from stu_course where sid=#{sid} and cid=#{cid}
+    </delete>
+    <update id="updatecou" parameterType="Integer">
+        update course set cselcount=cselcount-1 where cid=#{cid}
+    </update>
+</mapper>

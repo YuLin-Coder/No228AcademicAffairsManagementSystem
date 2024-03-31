@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>成绩管理</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+</head>
+<body>
+
+<form class="layui-form" style="padding: 10px;" id="fors">
+
+
+
+    <div class="layui-inline">
+        <label class="layui-form-label">系部名称</label>
+        <div class="layui-input-inline">
+            <select name="did" id="did" lay-filter="select" class="layui-input" lay-verify="required">
+                <option value=""></option>
+            </select>
+        </div>
+
+
+    </div>
+
+    <div class="layui-inline">
+        <label class="layui-form-label">专业名称</label>
+        <div class="layui-input-inline">
+            <select name="mid" id="mid" lay-filter="selMa" class="layui-input" lay-verify="required">
+                <option value=""></option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-inline">
+        <label class="layui-form-label">年级名称</label>
+        <div class="layui-input-inline">
+            <select name="gid" id="gid" lay-filter="selGr" class="layui-input" lay-verify="required">
+                <option value=""></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-inline">
+        <label class="layui-form-label">班级名称</label>
+        <div class="layui-input-inline">
+            <select name="classid" id="classid" lay-filter="selCl" class="layui-input" lay-verify="required">
+                <option value=""></option>
+            </select>
+        </div>
+    </div>
+</form>
+<!--添加成绩的弹出层-->
+<div style="display: none;padding: 20px" id="saveOrAddDiv" >
+    <form class="layui-form"  lay-filter="dataFrm" id="dataFrm">
+        <input type="text" name="sid"  id="sid" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input" style="display: none">
+        <input type="text" name="scid" id="scid" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input" style="display: none">
+        <div class="layui-form-item">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-inline">
+                <input type="text" name="sname" id="sname"  lay-verify="required" readonly="true" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+
+
+            <label class="layui-form-label">科目</label>
+            <div class="layui-input-inline">
+                <input type="text" name="cname"  lay-verify="required" readonly="true" placeholder="请输入" autocomplete="off" class="layui-input">
+
+        </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">平时成绩</label>
+            <div class="layui-input-inline">
+                <input type="text" name="normalexam" id="normalexam"  lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+            <label class="layui-form-label">考试成绩</label>
+            <div class="layui-input-inline">
+                <input type="text" name="testexam" id="testexam"  lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">综合成绩</label>
+            <div class="layui-input-inline">
+                <input type="text" name="sumexam" id="sumexam"  lay-verify="required" readonly="true" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+            <label class="layui-form-label">学期</label>
+            <div class="layui-input-inline">
+            <select name="stime" id="stime"  lay-verify="required">
+                <option value="1">大一上学期</option>
+                <option value="2">大一下学期</option>
+                <option value="3">大二上学期</option>
+                <option value="4">大二下学期</option>
+                <option value="5">大三上学期</option>
+                <option value="6">大三下学期</option>
+            </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-inline" style="margin-left: 200px;margin-top: 50px">
+                <button type="button" class="layui-btn layui-btn-primary" lay-filter="formDemo" lay-submit>提交</button>
+            </div>
+            <div class="layui-input-inline" style="margin-top: 50px">
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+
+</div>
+<!-- 数据表格开始 -->
+<table class="layui-hide" id="userTable" lay-filter="userTable"></table>
+<script>
+    var tableIns;
+    layui.use([ 'jquery', 'layer', 'form', 'table'], function() {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var mainIndex;
+
+        //渲染数据表格
+        tableIns=table.render({
+            elem: '#userTable'   //渲染的目标对象
+            ,url:'selScs' //数据接口
+            ,title: '选课表'//数据导出来的标题
+            ,toolbar:"#userToolBar"   //表格的工具条
+            ,cellMinWidth:200 //设置列的最小默认宽度
+            ,page: 1  //是否启用分页, limits: [10, 20, 30]
+            ,limits: [3, 10, 20]
+            ,limit: 3//每页数据默认采用3
+            ,cols: [
+                [   //列表数据
+                    {field:'classname', title:'班级名字',align:'center'}
+                    ,{field:'sname', title:'学生名',align:'center'}
+                    ,{field:'cname', title:'课程名',align:'center'}
+                    ,{fixed: '', title:'操作',align:'center',width:'170',templet:function(data){
+                        return '<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="add">录入成绩</a>'
+                    }}
+                ]
+            ]
+        })
+        //监听行工具事件
+        table.on('tool(userTable)', function(obj){
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            if(layEvent == 'add'){
+                openAdd(data);
+            }
+        });
+        //添加
+        //打开添加页面
+        function openAdd(data){
+                mainIndex=layer.open({
+                    type:1,
+                    title:'添加',
+                    content:$("#saveOrAddDiv"),
+                    area:['800px','350px'],
+                    success:function(index){
+                        form.val("dataFrm",data);
+                        form.on('submit(formDemo)', function(){
+                            var sid=$("#sid").val();
+                            var scid=$("#scid").val();
+                            var normalexam=$("#normalexam").val();
+                            var testexam=$("#testexam").val();
+                            var sumexam=$("#sumexam").val();
+                            var stime=$("#stime").val();
+                            $.post("/selmessage",{ sid:sid, scid:scid, normalexam:normalexam, testexam:testexam, sumexam:sumexam, stime:stime},function(res){
+                                layer.msg(res)
+                                window.setTimeout('window.location.href="/selstudentExam"',2000);
+                            })
+                        })
+                        }
+
+                });
+        }
+        $("#normalexam").on('blur',function () {
+            var  nexamreg= /^(([^0][0-9]+|0)\.([0-9]{1,2})$)|^(([^0][0-9]+|0)$)|^(([1-9]+)\.([0-9]{1,2})$)|^(([1-9]+)$)/
+            var normalexam=$("#normalexam").val();
+            var testexam=$("#testexam").val();
+            if(normalexam>100||normalexam<0){
+                layer.msg("最低分为0，最高分为100");
+                $("#normalexam").val("");
+            }
+            else if(!nexamreg.test(normalexam)&&normalexam!=""){
+                layer.msg("只能为数字");
+                $("#normalexam").val("");
+            }
+        })
+        $("#testexam").on('blur',function () {
+            var  texamreg= /^(([^0][0-9]+|0)\.([0-9]{1,2})$)|^(([^0][0-9]+|0)$)|^(([1-9]+)\.([0-9]{1,2})$)|^(([1-9]+)$)/
+            var normalexam=$("#normalexam").val();
+            var testexam=$("#testexam").val();
+            if(testexam>100||testexam<0){
+                alert("最低分为0，最高分为100")
+                $("#testexam").val("");
+            }
+            else if(!texamreg.test(testexam)&&testexam!=""){
+                layer.msg("只能为数字");
+                $("#testexam").val("");
+            }
+          else  if (testexam=="") {
+                $("#sumexam").val("")
+            }
+            else if(testexam!=""){$("#sumexam").val((parseFloat(normalexam)+parseFloat(testexam))/2);
+            }
+        })
+        //渲染下拉框
+
+        $.ajax({
+            //要跳转的地址
+            url: 'selDes',
+            //数据类型
+            dataType: 'json',
+
+            //提交类型
+            type: 'post',
+            //查询成功后执行的方法
+
+            success: function (data) {
+
+                $.each(data, function (index, item) {
+                    $('#did').append(new Option(item.dname, item.did));// 下拉菜单里添加元素
+
+                });
+                form.render();
+            }
+
+        });
+        //监听系
+        form.on("select(select)",function(obj){
+
+            $('#mid').html("");
+            $('#gid').html("");
+            $('#classid').html("");
+            var did=  $("#did").val();
+
+            $.ajax({
+                //要跳转的地址
+                url: 'selMas',
+                //数据类型
+                data:{
+                    did:did
+                },
+                dataType: 'json',
+                //提交类型
+                type: 'post',
+                //查询成功后执行的方法
+
+                success: function (obj) {
+                    $.each(obj, function (index, item) {
+                        $('#mid').append(new Option(item.mname,item.mid));// 下拉菜单里添加元素
+                    });
+                    form.render();
+
+                    var mid=  $("#mid").val();
+                    $.ajax({
+                        //要跳转的地址
+                        url: 'selGrs',
+                        //数据类型
+                        data:{
+                            mid:mid
+                        },
+                        dataType: 'json',
+                        //提交类型
+                        type: 'post',
+                        //查询成功后执行的方法
+
+                        success: function (oba) {
+                            $.each(oba, function (index, item) {
+                                $('#gid').append(new Option(item.gname,item.gid));// 下拉菜单里添加元素
+                            });
+                            form.render();
+                            var gid=  $("#gid").val();
+                            $.ajax({
+                                //要跳转的地址
+                                url: 'selCls',
+                                //数据类型
+                                data:{
+                                    gid:gid
+                                },
+                                dataType: 'json',
+                                //提交类型
+                                type: 'post',
+                                //查询成功后执行的方法
+
+                                success: function (objss) {
+                                    $.each(objss, function (index, item) {
+                                        $('#classid').append(new Option(item.classname,item.classid));// 下拉菜单里添加元素
+                                    });
+                                    form.render();
+                                    var classid=$("#classid").val();
+                                    tableIns.reload({
+                                        url:"selScs?classid="+classid
+                                    })
+                                }
+                            })
+                        }
+                    })
+
+                }
+            });
+
+        });
+
+
+
+
+
+
+
+
+        //-------------------------------以下是监听----------------------------------
+
+
+
+        //监听专业
+        form.on("select(selMa)",function(obj){
+
+            $('#gid').html("");
+            $('#classid').html("");
+            var mid=  $("#mid").val();
+            $.ajax({
+                //要跳转的地址
+                url: 'selGrs',
+                //数据类型
+                data:{
+                    mid:mid
+                },
+                dataType: 'json',
+                //提交类型
+                type: 'post',
+                //查询成功后执行的方法
+
+                success: function (oba) {
+                    $.each(oba, function (index, item) {
+                        $('#gid').append(new Option(item.gname,item.gid));// 下拉菜单里添加元素
+                    });
+                    form.render();
+                    var gid=  $("#gid").val();
+
+
+                    $.ajax({
+                        //要跳转的地址
+                        url: 'selCls',
+                        //数据类型
+                        data:{
+                            gid:gid
+                        },
+                        dataType: 'json',
+                        //提交类型
+                        type: 'post',
+                        //查询成功后执行的方法
+
+                        success: function (objss) {
+                            $.each(objss, function (index, item) {
+                                $('#classid').append(new Option(item.classname,item.classid));// 下拉菜单里添加元素
+                            });
+                            form.render();
+                            var classid=$("#classid").val();
+                            tableIns.reload({
+                                url:"selScs?classid="+classid
+                            })
+                        }
+                    })
+                }
+            })
+        });
+        //监听年级
+        form.on("select(selGr)",function(obj){
+            $('#classid').html("");
+            var gid=  $("#gid").val();
+            $.ajax({
+                //要跳转的地址
+                url: 'selCls',
+                //数据类型
+                data:{
+                    gid:gid
+                },
+                dataType: 'json',
+                //提交类型
+                type: 'post',
+                //查询成功后执行的方法
+
+                success: function (objss) {
+                    $.each(objss, function (index, item) {
+                        $('#classid').append(new Option(item.classname,item.classid));// 下拉菜单里添加元素
+                    });
+                    form.render();
+                    var classid=$("#classid").val();
+                    tableIns.reload({
+                        url:"selScs?classid="+classid
+                    })
+                }
+            })
+        });
+        //监听班级
+        form.on("select(selCl)",function(obj){
+            var classid=$("#classid").val();
+            tableIns.reload({
+                url:"selScs?classid="+classid
+            })
+
+        });
+    });
+</script>
+</body>
+</html>

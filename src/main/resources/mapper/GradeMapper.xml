@@ -1,0 +1,40 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.GradeMapper">
+   <!-- 查询学生个人信息 -->
+    <select id="selStudentMessage" resultType="map" parameterType="map">
+        select s.stuid,s.sname,d.dname,concat(g.gname,m.mname,class.classname) gmc from student s
+        left join classinfo class on s.classid = class.classid
+        left join grade g on class.gid = g.gid
+        left join major m on g.mid = m.mid
+        left join department d on m.did = d.did where s.stuid = #{stuid}
+    </select>
+    <!-- 查询学生成绩信息 -->
+    <select id="selGrade" resultType="map" parameterType="map">
+        select se.*,c.cname,c.ccredit,c.cperiod,concat(ct.ctname,'/',c.studytype) type from stu_exam se
+        left join student s on se.sid = s.sid
+        left join stu_course sc on se.scid = sc.scid
+        left join course c on sc.cid = c.cid
+        left join course_type ct on c.ctid = ct.ctid
+        <where>s.stuid = #{stuid}
+            <if test="stime!=null and stime!=''">
+                and se.stime = #{stime}
+            </if>
+        </where>
+    </select>
+
+    <!-- 查询教师个人信息 -->
+    <select id="selTea" resultType="TeacherDB">
+        select * from teacher where tid = #{tid}
+    </select>
+
+    <!-- 查询学分 -->
+    <select id="selCcredit" resultType="int">
+        select sum(c.ccredit) ccredit from stu_exam e
+        left join stu_course cou on e.scid = cou.scid
+        left join student s on e.sid = s.sid
+        left join course c on cou.cid = c.cid where s.stuid = #{stuid} GROUP BY e.sid
+    </select>
+</mapper>

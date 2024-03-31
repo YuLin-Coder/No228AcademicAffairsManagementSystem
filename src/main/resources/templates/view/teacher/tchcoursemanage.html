@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>教师授课管理</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/addnews.css}"/>
+
+
+</head>
+<style>
+    .layui-card {
+        box-shadow: #c0c0c0 0 1px 3px;
+    }
+    .layui-row .layui-form-item {
+        padding: 0 5px;
+    }
+</style>
+<body>
+<form class="layui-form layui-form-pane" style="padding: 10px;">
+    <div class="layui-row">
+        <div class="layui-col-xs12 layui-col-sm12 layui-col-md6">
+            <fieldset class="layui-elem-field">
+                <legend>教师查询</legend>
+                <div class="layui-field-box">
+                    <div class="layui-col-xs12 layui-col-sm12 layui-col-md6">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">教师工号</label>
+                            <div class="layui-input-block">
+                                <select id="selByTchId" name="selByTchId" lay-filter="selByTchId" lay-verify="selByTchId"
+                                        lay-search></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-xs12 layui-col-sm12 layui-col-md6">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">教师姓名</label>
+                            <div class="layui-input-block">
+                                <select id="selByTchName" name="selByTchName" lay-filter="selByTchName"
+                                        lay-verify="selByTchName" lay-search></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+</form>
+<table id="tchlist" lay-filter="gradeTable"></table>
+<div id="selDiv" style="display: none;">
+    <table id="sellist" lay-filter="tchTable"></table>
+</div>
+<div id="editDiv" style="display: none;">
+    <form class="layui-form layui-form-pane" style="padding: 10px;">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属系别</label>
+            <div class="layui-input-block">
+                <select id="editSelDpm" name="editSelDpm" lay-filter="editSelDpm" lay-verify="editSelDpm"
+                        lay-search></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属专业</label>
+            <div class="layui-input-block">
+                <select id="editSelMajor" name="editSelMajor" lay-filter="editSelMajor" lay-verify="editSelMajor"
+                        lay-search></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属年级</label>
+            <div class="layui-input-block">
+                <select id="editSelGrade" name="editSelGrade" lay-filter="editSelGrade" lay-verify="editSelGrade"
+                        lay-search></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">选择班级</label>
+            <div class="layui-input-block">
+                <select id="editSelClass" name="editSelClass" lay-filter="editSelClass" lay-verify="editSelClass"
+                        lay-search></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">选择课目</label>
+            <div class="layui-input-block">
+                <select id="editSelCourse" name="editSelCourse" lay-filter="editSelCourse" lay-verify="editSelCourse"
+                        lay-search></select>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+</body>
+
+</html>
+<script type="text/html" id="barBtn">
+    <a class="layui-btn layui-btn-sm" lay-event="sel">已选</a>
+    <a class="layui-btn layui-btn-sm" lay-event="edit">选课</a>
+</script>
+<script type="text/html" id="delBarBtn">
+    <a class="layui-btn layui-btn-sm" lay-event="del">删除</a>
+</script>
+<script>
+    layui.use(['jquery', 'layer', 'form', 'table', 'laydate'], function () {
+        var $ = layui.$ //重点处
+            , layer = layui.layer
+            , form = layui.form
+            , table = layui.table
+            , layer = layui.layer
+            , laydate = layui.laydate;
+        var tableId;
+        var selTable;
+        //获取分页数据列表
+        tableId = table.render({
+            elem: '#tchlist',
+            url: '/tchcoursemanage/findalltch',
+            cols: [
+                [
+                    {field: 'tchid', title: '教师工号'}
+                    , {field: 'tname', title: '教师姓名'}
+                    , {fixed: 'right', title: '操作', toolbar: '#barBtn', width: 150}
+                ]
+            ],
+            page: true,
+            even: true,
+            id: 'tableReload'
+        });
+        selTable = table.render({
+            elem: '#sellist',
+            cols: [
+                [
+                    {field: 'tid', title: '教师工号'}
+                    , {field: 'tname', title: '教师姓名'}
+                    , {field: 'cname', title: '课目'}
+                    , {field: 'classname', title: '班级'}
+                    , {field: 'gname', title: '年级'}
+                    , {fixed: 'right', title: '操作', toolbar: '#delBarBtn', width: 100}
+                ]
+            ],
+            page: true,
+            even: true,
+            id: 'selReload'
+        });
+        //监听删除工具条
+        table.on('tool(tchTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('确定要删除该门课吗？', function (index) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/tchcoursemanage/deltchcourse',
+                        data: {
+                            tcsid:data.tcsid
+                        },
+                        success: function (editdata) {
+                            if (editdata == true) {
+                                layer.open({
+                                    content: '删除成功！',
+                                    yes: function (index) {
+                                        layer.close(index);
+                                        window.location.reload();
+                                    }
+                                });
+                            } else {
+                                layer.alert('删除失败，请稍后重试！');
+                            }
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+
+        });
+
+        //监听添加查看工具条
+        table.on('tool(gradeTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') {
+                $("#editClassText").val(data.classname);
+                //获取系部表
+                $.ajax({
+                    type: 'post',
+                    url: '/schoolmanage/findalldpm?page=1&limit=1000',
+                    data: {},
+                    success: function (editdata) {var result = editdata.data;
+                        var lists = '';
+                        for (var i in result) {
+                            if (result[i].did == data.did) {
+                                lists += "<option selected value='" + result[i].did + "'>" + result[i].dname + "</option>";
+                            } else {
+                                lists += "<option value='" + result[i].did + "'>" + result[i].dname + "</option>";
+                            }
+                        }
+                        $('#editSelDpm').html(lists);
+                        //获取对应专业
+                        $.ajax({
+                            type: 'post',
+                            url: '/schoolmanage/jlselmajor?page=1&limit=1000',
+                            data: {
+                                did: $("#editSelDpm option:selected").val()
+                            },
+                            success: function (alldata) {var result = alldata.data;
+                                var lists = '';
+                                for (var i in result) {
+                                    if (result[i].mid == data.mid) {
+                                        lists += "<option selected value='" + result[i].mid + "'>" + result[i].mname + "</option>";
+                                    } else {
+                                        lists += "<option value='" + result[i].mid + "'>" + result[i].mname + "</option>";
+                                    }
+                                }
+                                $('#editSelMajor').html(lists);
+                                //获取对应年级
+                                $.ajax({
+                                    type: 'post',
+                                    url: '/schoolmanage/jlselgrade?page=1&limit=1000',
+                                    data: {
+                                        mid: $("#editSelMajor option:selected").val()
+                                    },
+                                    success: function (alldata) {var result = alldata.data;
+                                        var lists = '';
+                                        for (var i in result) {
+                                            if (result[i].gid == data.gid) {
+                                                lists += "<option selected value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                                            } else {
+                                                lists += "<option value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                                            }
+                                        }
+                                        $('#editSelGrade').html(lists);
+                                        form.render();
+                                        //获取班级
+                                        $.ajax({
+                                            type: 'post',
+                                            url: '/tchcoursemanage/findtchcourseclassname?page=1&limit=1000',
+                                            data: {
+                                                gid: $("#editSelGrade option:selected").val()
+                                            },
+                                            success: function (alldata) {
+
+                                                var result = alldata.data;
+                                                var lists = "";
+                                                for (var i in result) {
+                                                    lists += "<option value='" + result[i].classid + "'>" + result[i].classname + "</option>";
+                                                }
+                                                $('#editSelClass').html(lists);
+                                                form.render();
+                                                //获取课目
+                                                $.ajax({
+                                                    type: 'post',
+                                                    url: '/tchcoursemanage/findallcoursebymajorname?page=1&limit=1000',
+                                                    data: {
+                                                        mname: $("#editSelMajor option:selected").text()
+                                                    },
+                                                    success: function (alldata) {
+
+                                                        var result = alldata.data;
+                                                        var lists = "";
+                                                        for (var i in result) {
+                                                            lists += "<option value='" + result[i].cid + "'>" + result[i].cname + "</option>";
+                                                        }
+                                                        $('#editSelCourse').html(lists);
+                                                        form.render();
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+
+                                });
+                                form.render();
+                            }
+                        });
+                        form.render();
+                    }
+
+                });
+                //获取星期
+                $.ajax({
+                    type: 'post',
+                    url: '/tchcoursemanage/findallweeks?page=1&limit=1000',
+                    data: {},
+                    success: function (alldata) {
+
+                        var result = alldata.data;
+                        var lists = "";
+                        for (var i in result) {
+                            lists += "<option value='" + result[i].wid + "'>" + result[i].walias + "</option>";
+                        }
+                        $('#editSelWeeks').html(lists);
+                        form.render();
+                    }
+                });
+                //获取节段
+                $.ajax({
+                    type: 'post',
+                    url: '/tchcoursemanage/findallschedule?page=1&limit=1000',
+                    data: {},
+                    success: function (alldata) {
+
+                        var result = alldata.data;
+                        var lists = "";
+                        for (var i in result) {
+                            if(!(result[i].schname=='起床'||result[i].schname=='早操'||result[i].schname=='早饭'||result[i].schname=='预备'||result[i].schname=='课间操'||result[i].schname=='午饭'||result[i].schname=='课外活动')){
+                                lists += "<option value='" + result[i].schid + "'>" + result[i].schname + "</option>";
+                            }
+                        }
+                        $('#editSelSchedule').html(lists);
+                        form.render();
+                    }
+                });
+                //编辑授课
+                layer.open({
+                    type: 1,
+                    resize: false,
+                    area: ['600px', '500px'],
+                    title: '选择授课教师：'+data.tname+' 教师工号：' + data.tchid,
+                    content: $('#editDiv'),
+                    btn: ['提交', '取消'],
+                    yes: function (index) {
+                        var tchCourseData = {
+                            tid:data.tchid,
+                            classid:$("#editSelClass option:selected").val(),
+                            cid:$("#editSelCourse option:selected").val(),
+                            wid:1,
+                            schid:1,
+                            gid:$("#editSelGrade option:selected").val()
+                        };
+                        var tips='确定让【'+data.tname+'】老师教 ['+$("#editSelGrade option:selected").text()+'] ['+$("#editSelDpm option:selected").text()+'] ['+$("#editSelMajor option:selected").text()+'] ['+$("#editSelClass option:selected").text()+'班] 的 ['+$("#editSelCourse option:selected").text()+'课] 吗？';
+                        layer.confirm(tips.toString(), function (index) {
+                            $.ajax({
+                                type: 'post',
+                                url: '/tchcoursemanage/addonetchcourse',
+                                data: tchCourseData,
+                                success: function (editdata) {
+                                    if (editdata == true) {
+                                        layer.open({
+                                            content: '添加成功！',
+                                            yes: function (index) {
+                                                layer.close(index);
+                                                window.location.reload();
+                                            }
+                                        });
+                                    } else {
+                                        layer.alert('无法授课，该课已存在或与其他教师冲突！');
+                                    }
+                                }
+                            });
+                            layer.close(index);
+                        });
+
+
+
+                    }
+                });
+            }else if (obj.event === 'sel') {
+                selTable.reload({
+                    url : '/tchcoursemanage/findcoursebytch?tid=' + data.tchid
+                });
+                //查看授课
+                layer.open({
+                    type: 1,
+                    resize: false,
+                    area: ['1000px', '500px'],
+                    title: '查看【'+data.tname+'】所授课目，教师工号：' + data.tchid,
+                    content: $('#selDiv'),
+                    btn: ['确认'],
+                    yes: function (index) {
+                        layer.close(index);
+                    }
+                });
+            }
+
+        });
+
+        /***************************************************************级联查询*********************************************************************/
+        //编辑时级联获取年级
+        form.on('select(editSelDpm)', function (seldata) {
+            //获取对应专业
+            $.ajax({
+                type: 'post',
+                url: '/schoolmanage/jlselmajor?page=1&limit=1000',
+                data: {
+                    did: seldata.value
+                },
+                success: function (alldata) {var result = alldata.data;
+                    var lists = '';
+                    for (var i in result) {
+                        lists += "<option value='" + result[i].mid + "'>" + result[i].mname + "</option>";
+                    }
+                    $('#editSelMajor').html(lists);
+                    //获取对应年级
+                    $.ajax({
+                        type: 'post',
+                        url: '/schoolmanage/jlselgrade?page=1&limit=1000',
+                        data: {
+                            mid: $("#editSelMajor option:selected").val()
+                        },
+                        success: function (alldata) {var result = alldata.data;
+                            var lists = '';
+                            for (var i in result) {
+                                lists += "<option value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                            }
+                            $('#editSelGrade').html(lists);
+                            form.render();
+                            //获取班级
+                            $.ajax({
+                                type: 'post',
+                                url: '/tchcoursemanage/findtchcourseclassname?page=1&limit=1000',
+                                data: {
+                                    gid: $("#editSelGrade option:selected").val()
+                                },
+                                success: function (alldata) {
+
+                                    var result = alldata.data;
+                                    var lists = "";
+                                    for (var i in result) {
+                                        lists += "<option value='" + result[i].classid + "'>" + result[i].classname + "</option>";
+                                    }
+                                    $('#editSelClass').html(lists);
+                                    form.render();
+                                    //获取课目
+                                    $.ajax({
+                                        type: 'post',
+                                        url: '/tchcoursemanage/findallcoursebymajorname?page=1&limit=1000',
+                                        data: {
+                                            mname: $("#editSelMajor option:selected").text()
+                                        },
+                                        success: function (alldata) {
+
+                                            var result = alldata.data;
+                                            var lists = "";
+                                            for (var i in result) {
+                                                lists += "<option value='" + result[i].cid + "'>" + result[i].cname + "</option>";
+                                            }
+                                            $('#editSelCourse').html(lists);
+                                            form.render();
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                    form.render();
+
+                }
+            });
+
+        });
+        //编辑时级联获取年级
+        form.on('select(editSelMajor)', function (seldata) {
+            //获取对应年级
+            $.ajax({
+                type: 'post',
+                url: '/schoolmanage/jlselgrade?page=1&limit=1000',
+                data: {
+                    mid: seldata.value
+                },
+                success: function (alldata) {
+                    var result = alldata.data;
+                    var lists = '';
+                    for (var i in result) {
+                        lists += "<option value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                    }
+                    $('#editSelGrade').html(lists);
+                    form.render();
+                    //获取班级
+                    $.ajax({
+                        type: 'post',
+                        url: '/tchcoursemanage/findtchcourseclassname?page=1&limit=1000',
+                        data: {
+                            gid: $("#editSelGrade option:selected").val()
+                        },
+                        success: function (alldata) {
+
+                            var result = alldata.data;
+                            var lists = "";
+                            for (var i in result) {
+                                lists += "<option value='" + result[i].classid + "'>" + result[i].classname + "</option>";
+                            }
+                            $('#editSelClass').html(lists);
+                            form.render();
+                            //获取课目
+                            $.ajax({
+                                type: 'post',
+                                url: '/tchcoursemanage/findallcoursebymajorname?page=1&limit=1000',
+                                data: {
+                                    mname: $("#editSelMajor option:selected").text()
+                                },
+                                success: function (alldata) {
+
+                                    var result = alldata.data;
+                                    var lists = "";
+                                    for (var i in result) {
+                                        lists += "<option value='" + result[i].cid + "'>" + result[i].cname + "</option>";
+                                    }
+                                    $('#editSelCourse').html(lists);
+                                    form.render();
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+        //编辑时年级级联获取班级
+        form.on('select(editSelGrade)', function (seldata) {
+            //获取班级
+            $.ajax({
+                type: 'post',
+                url: '/tchcoursemanage/findtchcourseclassname?page=1&limit=1000',
+                data: {
+                    gid: $("#editSelGrade option:selected").val()
+                },
+                success: function (alldata) {
+
+                    var result = alldata.data;
+                    var lists = "";
+                    for (var i in result) {
+                        lists += "<option value='" + result[i].classid + "'>" + result[i].classname + "</option>";
+                    }
+                    $('#editSelClass').html(lists);
+                    form.render();
+                }
+            });
+        });
+        /***************************************************************条件查询*********************************************************************/
+
+        /**
+         * 默认填充
+         */
+        //填充教师工号
+        $.ajax({
+            type: 'post',
+            url: '/tchcoursemanage/findalltch?page=1&limit=100000',
+            data: {},
+            success: function (alldata) {
+
+                var result = alldata.data;
+                var lists = "<option value='all'>全部</option>";
+                for (var i in result) {
+                    lists += "<option value='" + result[i].tchid + "'>" + result[i].tchid + "</option>";
+                }
+                $('#selByTchId').html(lists);
+                form.render();
+            }
+        });
+        //填充教师姓名
+        $.ajax({
+            type: 'post',
+            url: '/tchcoursemanage/findalltchbyname?page=1&limit=1000',
+            data: {},
+            success: function (alldata) {
+
+                var result = alldata.data;
+                var lists = "<option value='all'>请选择</option>";
+                for (var i in result) {
+                    lists += "<option value='" + result[i].tname + "'>" + result[i].tname + "</option>";
+                }
+                $('#selByTchName').html(lists);
+                form.render();
+            }
+        });
+
+        //按教师工号查询
+        form.on('select(selByTchId)', function (seldata) {
+            if(seldata.value=='all'){
+                tableId.reload({
+                    url : '/tchcoursemanage/findalltch'
+                });
+            }else{
+                tableId.reload({
+                    url : '/tchcoursemanage/findalltch?tchid=' + seldata.value
+                });
+            }
+            form.render();
+        });
+        //按教师姓名查询
+        form.on('select(selByTchName)', function (seldata) {
+            if(seldata.value=='all'){
+                tableId.reload({
+                    url : '/tchcoursemanage/findalltch'
+                });
+            }else{
+                tableId.reload({
+                    url : '/tchcoursemanage/findalltch?tname=' + seldata.value
+                });
+            }
+            form.render();
+        });
+
+
+
+
+
+
+
+
+
+
+
+    });
+
+
+</script>

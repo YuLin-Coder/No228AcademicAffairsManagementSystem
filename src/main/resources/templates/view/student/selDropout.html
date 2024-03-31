@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>退学信息查询</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+</head>
+<body>
+<div>
+    <div class="demoTable"  style="margin-top: 10px;margin-left: 15px">
+        学生编号：
+        <div class="layui-inline">
+            <input class="layui-input" name="sid" id="demoReload" autocomplete="off">
+        </div>&nbsp;&nbsp;
+        学生姓名：
+        <div class="layui-inline">
+            <input class="layui-input" name="sid" id="demoReload1" autocomplete="off">
+        </div>
+    </div>
+    <button class="layui-btn" type="button" id="selBtn" style="margin-left: 580px;margin-top: -53px">开始搜索</button>
+    <button class="layui-btn" type="button" id="qxBtn"style="margin-top: -53px">取消搜索</button>
+    <table class="layui-hide" id="demo" lay-filter="test">
+    </table>
+
+</div>
+
+<script>
+    layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider', 'jquery', 'form'], function() {
+        var laydate = layui.laydate ,//日期
+            laypage = layui.laypage, //分页
+            layer = layui.layer, //弹层
+            table = layui.table, //表格
+            carousel = layui.carousel, //轮播
+            upload = layui.upload, //上传
+            element = layui.element, //元素操作
+            slider = layui.slider,//滑块
+            form = layui.form;
+        element.on('tab(demo)', function(data){
+            layer.tips('切换了 '+ data.index +'：'+ this.innerHTML, this, {
+                tips: 1
+            });
+        });
+
+        //执行一个 table 实例
+        table.render({
+            elem: '#demo'
+            ,height: 550
+            ,url: 'selDropout' //数据接口
+            ,title: '退学信息表'
+            ,page: true //开启分页
+            ,limits:[5,10,15]
+
+            ,cols: [
+                [ //表头
+                    //{field: "sid", title: '学生编号'},
+                    {field: "stuid", title: '学号'},
+                    {field: "sname", title: '姓名'},
+                    {field: "sgender", title: '性别'},
+                    {field: "scardid", title: '身份证号'},
+                    {field: "entertime", title: '入学日期',templet:"<div>{{layui.util.toDateString(d.entertime, 'yyyy-MM-dd')}}</div>"},
+                    {field: "leavetime", title: '离校日期',templet:"<div>{{layui.util.toDateString(d.leavetime, 'yyyy-MM-dd')}}</div>"},
+                    {field: "stustate", title: '状态'},
+                    {field: "drreason", title: '退学理由', width: 350}
+
+                ]
+            ]
+            , id: 'selDropout',
+            done: function (res, curr, count) {
+                $("[data-field='stustate']").children().each(function () {
+                    if ($(this).text() == 0) {
+                        $(this).text("注册学籍")
+                    }
+                    if($(this).text() == 1){
+                        $(this).text("保留学籍")
+                    }
+                    if($(this).text() == 2){
+                        $(this).text("已离校")
+                    }
+                });
+            }
+        });
+
+
+        //分页
+        laypage.render({
+            elem: 'pageDemo' //分页容器的id
+            ,count: 100 //总页数
+            ,skin: '#1E9FFF' //自定义选中色值
+            //,skip: true //开启跳页
+            ,jump: function(obj, first){
+                if(!first){
+                    layer.msg('第'+ obj.curr +'页', {offset: 'b'});
+                }
+            }
+        });
+
+        /*条件查询按钮*/
+        //  根据学生姓名查询
+        var $ = layui.$;
+        $('#selBtn').on('click', function(){
+            //获取输入框
+            var stuid = $('#demoReload');
+            var sname = $('#demoReload1');
+            //执行重载
+            table.reload('selDropout', {
+                page: {
+                    curr: 1 //重新从第 1 页开始
+                }
+                ,where: {
+                    stuid: stuid.val(),
+                    sname: sname.val()
+                }
+            });
+        });
+
+        //    取消查询
+        var $ = layui.$;
+        $('#qxBtn').on('click', function(){
+            window.location.reload();
+        });
+
+    });
+</script>
+</body>
+</html>

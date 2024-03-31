@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/addnews.css}"/>
+</head>
+<body>
+<input id="sid" th:value="${sid.getSid()}" style="display: none">
+<form class="layui-form">
+    <div class="layui-form-item" >
+        <label class="layui-form-label">课程类型</label>
+        <div class="layui-input-block" style="width: 200px;">
+            <select id="selCourseType" name="selCourseType" lay-filter="selCourseType" lay-verify="selCourseType" lay-search>
+                <option>请选择一个类型</option>
+                <optgroup id="CourseType"></optgroup>
+            </select>
+        </div>
+    </div>
+</form>
+<table class="layui-hide" id="userTable" lay-filter="userTable"></table>
+<div  id="userBar" style="display: none;">
+    <a class="layui-btn layui-btn-xs"  lay-event="add">添加</a>
+</div>
+</body>
+<script th:src="@{/layui/layui.js}"></script>
+<script type="text/javascript" th:inline="none">
+    layui.use([ 'jquery', 'layer', 'form', 'table','element'], function() {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+        var element = layui.element; //导航的hover效果、二级菜单等功能，需要依赖element模块
+        var tableid;
+        //渲染数据表格
+       tableid= table.render({
+            elem: '#userTable'   //渲染的目标对象
+            , url: 'selectCourse' //数据接口
+            , title: '用户数据表'//数据导出来的标题
+            , toolbar: "#userToolBar"   //表格的工具条
+            //,height:'full-200'
+            , cellMinWidth: 200 //设置列的最小默认宽度
+            , page: 1  //是否启用分页, limits: [10, 20, 30]
+            , limit: 10
+            , cols: [[   //列表数据
+                {field: 'cid', title: '课程编号'}
+                ,{field: 'cname', title: '课程名称'}
+                , {field: 'ccredit', title: '学分'}
+                , {field: 'ctname', title: '课程类型'}
+                , {field: 'studytype', title: '修读类型'}
+                , {field: 'tname', title: '教授教师'}
+                , {field: 'cselcount', title: '已选人数'}
+                , {field: 'cmaxcount', title: '限定人数'}
+                , {fixed: 'right', title: '操作', toolbar: '#userBar'}
+            ]]
+        });
+        //获取对应年级
+        $.ajax({
+            url: '/course/seltype',
+            success: function (alldata) {
+                var result = alldata.data;
+                var lists = '';
+                for (var i in result) {
+                    lists += "<option>" + result[i].ctname + "</option>";
+                }
+                    $('#CourseType').html(lists);
+                form.render();
+            }
+        });
+        form.on('select(selCourseType)',function (seldata) {
+            tableid.reload({
+            url:'/course/selectCourse?ctname='+seldata.value
+            })
+        })
+        var sid=$("#sid").val();
+        table.on('tool(userTable)', function(obj){
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            if(layEvent === 'add'){ //删除
+                layer.confirm('确定选择【'+data.cname+'】这个课程吗', function(index){
+                    //向服务端发送添加指令
+                    $.post("/course/selcourse",{cid:data.cid,cselcount:data.cselcount,cmaxcount:data.cmaxcount,sid:sid},function(res){
+                        layer.msg(res);
+                        //刷新数据 表格
+                        tableid.reload();
+                    })
+                });
+            }
+        });
+    })
+</script>
+</html>

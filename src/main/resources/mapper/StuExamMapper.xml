@@ -1,0 +1,41 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.StuExamMapper">
+    <select id="selDes" resultType="com.yuanlrc.school.entity.DepartmentDB">
+        select * from department
+    </select>
+    <select id="selMas" resultType="com.yuanlrc.school.entity.MajorDB" parameterType="Integer">
+        select * from major where did=#{did}
+    </select>
+    <select id="selGrs" resultType="com.yuanlrc.school.entity.GradeDB" parameterType="Integer">
+        select * from grade where mid=#{mid}
+    </select>
+    <select id="selClasss" resultType="com.yuanlrc.school.entity.ClassinfoDB" parameterType="Integer">
+        select * from classinfo where gid=#{gid}
+    </select>
+    <select id="selScs" parameterType="com.yuanlrc.school.entity.StuExamVO" resultType="com.yuanlrc.school.entity.StuExamVO">
+        select ci.classname,ci.classid,s.sname,c.cname,s.sid,sc.scid from stu_course sc,student s,course c,classinfo ci,tch_course thc
+        where sc.sid=s.sid
+        and c.cid=sc.cid
+        and ci.classid=s.classid
+        and c.cid=thc.cid
+        and thc.tid=#{tid}
+        <if test="classid!=null">
+        and  ci.classid =#{classid}
+        </if>
+        and sc.is_del="0"
+        and s.is_del="0"
+        GROUP BY sc.scid
+    </select>
+   <insert id="add" parameterType="com.yuanlrc.school.entity.StuExamVO">
+    insert into stu_exam(sid,scid,normalexam,testexam,sumexam,stime,studynature,is_del)values(#{sid},#{scid},#{normalexam},#{testexam},#{sumexam},#{stime},0,0)
+   </insert>
+    <select id="selExam" parameterType="com.yuanlrc.school.entity.StuExamVO" resultType="int">
+        select count(*) from stu_exam where scid=#{scid} and stime=#{stime}
+    </select>
+    <update id="updateExam" parameterType="com.yuanlrc.school.entity.StuExamDB">
+        update stu_exam set normalexam=#{normalexam},testexam=#{testexam},sumexam=#{sumexam},stime=#{stime} where scid=#{scid}
+    </update>
+</mapper>

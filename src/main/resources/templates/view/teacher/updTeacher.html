@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+</head>
+<body>
+    <form th:each="t:${tea}" class="layui-form">
+        <input th:type="hidden" th:name="tid" th:value="${t.tid}">
+        <div class="layui-form-item" style="margin-top: 10px">
+            <label class="layui-form-label">编号：</label>
+            <div class="layui-input-inline">
+                <input class="layui-input" type="text"autocomplete="off" lay-verify="required" th:value="${t.tchid}" th:name="tchid" disabled>
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-top: 10px">
+        <label class="layui-form-label">姓名：</label>
+        <div class="layui-input-inline">
+            <input class="layui-input" type="text"autocomplete="off" lay-verify="tname" th:value="${t.tname}" th:name="tname">
+        </div>
+    </div>
+        <div class="layui-form-item" th:switch="${t.tgender}">
+            <label class="layui-form-label">性别：</label>
+            <div class="layui-input-block" th:case="'男'">
+                <input th:name="tgender" title="男" type="radio" checked="" value="男">
+                <input th:name="tgender" title="女" type="radio" value="女">
+            </div>
+            <div class="layui-input-block" th:case="'女'">
+                <input th:name="tgender" title="男" type="radio"  value="男">
+                <input th:name="tgender" title="女" type="radio" checked="" value="女">
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">出生日期：</label>
+                <div class="layui-input-inline">
+                    <input class="layui-input" id="test1" th:type="text"  th:value="${#dates.format(t.tbirthday,'yyyy-MM-dd')}" th:name="birthday">
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">政治面貌：</label>
+            <div class="layui-input-block">
+                <select th:name="pid" lay-filter="aihao">
+                    <option th:each="stu:${selpol}" th:value="${stu.pid}" th:text="${stu.pname}" th:selected="${t.pid==stu.pid}"></option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">民族：</label>
+            <div class="layui-input-inline">
+                <input name="username" class="layui-input" type="text"autocomplete="off" lay-verify="required" th:value="${t.tnation}" th:name="tnation">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">身份证号：</label>
+            <div class="layui-input-inline">
+                <input name="username" class="layui-input" type="text"autocomplete="off" lay-verify="tidnumber" th:value="${t.tcardid}" th:name="tcardid">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">手机号码：</label>
+            <div class="layui-input-inline">
+                <input name="username" class="layui-input" type="text"autocomplete="off" lay-verify="tphone" th:value="${t.tphone}" th:name="tphone">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">地址：</label>
+            <div class="layui-input-block">
+                <textarea class="layui-textarea" th:text="${t.taddress}" th:name="taddress"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">状态：</label>
+            <div class="layui-input-block">
+                <select th:name="tchstate" lay-filter="aihao">
+                    <option th:selected="${t.tchstate eq 0}" value="0" >在职</option>
+                    <option th:selected="${t.tchstate eq 1}" value="1">离职</option>
+                    <option th:selected="${t.tchstate eq 2}" value="2">休假</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn layui-btn-normal" lay-submit="" lay-filter="ti">提交</button>
+                <button class="layui-btn layui-btn-primary" type="reset">重置</button>
+            </div>
+        </div>
+    </form>
+</body>
+</html>
+<script>
+    layui.use(['form', 'layer', 'laydate'], function(){
+        var form = layui.form
+            ,layer = layui.layer
+            ,laydate = layui.laydate,
+            $=layui.jquery;
+        //日期
+        //常规用法
+        laydate.render({
+            elem: '#test1',
+            trigger: 'click',
+        });
+
+        //  表单验证
+        form.verify({
+            tname: function(value){
+                if($.trim(value).length<2){
+                    return '请按正确格式输入';
+                }
+            }
+            ,tidnumber: [
+                /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/
+                ,'请按正确格式填写信息'
+            ]
+            ,tphone: [
+                /^1[3456789]\d{9}$/
+                ,'请按正确格式填写信息'
+            ]
+        });
+
+        //监听提交
+        form.on('submit(ti)', function(data){
+            //data.field表单所有信息;
+            $.post("updateTeacher",data.field,function(result)
+                {
+                    layer.msg(result.msg, {
+                        icon: 1,
+                        time: 1000 //2秒关闭（如果不配置，默认是3秒）
+                    }, function(){
+                        //刷新父页面
+                        layer.close(layer.index);
+                        window.parent.location.reload();
+                    });
+                }
+            );
+            return false;
+        });
+    });
+</script>

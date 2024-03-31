@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>教评问题管理</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <script type="text/javascript" th:src="@{/static/js/marked.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/addnews.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/github-markdown.css}"/>
+
+
+</head>
+<style>
+    .layui-card {
+        box-shadow: #c0c0c0 0 1px 3px;
+    }
+</style>
+<body>
+
+
+<table id="evlist" lay-filter="tmTable"></table>
+
+<div id="editDiv" style="display: none">
+
+    <form class="layui-form layui-form-pane" style="padding: 10px;">
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label" style="color: red;">问题应该通俗易懂、简洁明了。</label>
+            <div class="layui-input-block">
+                <textarea id="editEvText" placeholder="请输入问题内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+<div id="addDiv" style="display: none">
+
+    <form class="layui-form layui-form-pane" style="padding: 10px;">
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label" style="color: red;">问题应该通俗易懂、简洁明了。</label>
+            <div class="layui-input-block">
+                <textarea id="addEvText" placeholder="请输入问题内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+</body>
+
+</html>
+<script type="text/html" id="barBtn">
+    <a class="layui-btn layui-btn-sm" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-sm layui-btn-danger" lay-event="del">删除</a>
+</script>
+
+<script>
+    layui.use(['jquery', 'layer', 'form', 'table', 'laydate'], function () {
+        var $ = layui.$ //重点处
+            , layer = layui.layer
+            , form = layui.form
+            , table = layui.table
+            , layer = layui.layer
+            , laydate = layui.laydate;
+
+
+        //获取分页数据列表
+        table.render({
+            elem: '#evlist'
+            ,
+            url: '/appraise/findalltm'
+            ,
+            cols: [
+                [
+                    {field: 'elid', title: '问题编号', width: 200}
+                    , {field: 'elcontent', title: '问题内容'}
+                    , {fixed: 'right', title: '操作', toolbar: '#barBtn', width: 150}
+                ]
+            ]
+            ,
+            page: true
+            ,
+            even: true
+            ,
+            toolbar: '<div><button type="button" lay-event="addOneEvBtn" class="layui-btn layui-btn-sm layui-btn-normal">添加问题</button></div>'
+        });
+        //头工具栏事件
+        table.on('toolbar(tmTable)', function (obj) {
+            if (obj.event == 'addOneEvBtn') {
+                $("#addEvText").val("");
+                //弹出添加问题窗口
+                layer.open({
+                    type: 1,
+                    resize: false,
+                    area: ['600px', '275px'],
+                    title: '添加问题',
+                    content: $('#addDiv'),
+                    btn: ['确认添加', '取消'],
+                    yes: function (index) {
+                        var addElcontent = $("#addEvText").val();
+                        if (addElcontent.trim() == "") {
+                            layer.alert('请输入问题内容！');
+                            $("#addEvText").val("");
+                        } else {
+                            layer.confirm('确定要添加吗？', function (index) {
+                                $.ajax({
+                                    type: 'post',
+                                    url: '/appraise/addoneev',
+                                    data: {
+                                        elcontent: addElcontent
+                                    },
+                                    success: function (adddata) {
+                                        if (adddata == true) {
+                                            layer.open({
+                                                content: '添加成功！',
+                                                yes: function (index) {
+                                                    layer.close(index);
+                                                    window.location.reload();
+                                                }
+                                            });
+                                        } else {
+                                            layer.msg('提交失败，请稍后重试！');
+                                        }
+                                    }
+                                });
+                                layer.close(index);
+                            });
+                        }
+
+
+                    }
+                });
+            }
+        });
+        //监听工具条
+        table.on('tool(tmTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') {
+                $("#editEvText").val(data.elcontent);
+                //编辑问题
+                layer.open({
+                    type: 1,
+                    resize: false,
+                    area: ['600px', '275px'],
+                    title: '编辑问题 问题编号：' + data.elid,
+                    content: $('#editDiv'),
+                    btn: ['提交修改', '取消'],
+                    yes: function (index) {
+                        var editElcontent = $("#editEvText").val();
+                        if (editElcontent.trim() == "") {
+                            layer.alert('请输入问题内容！');
+                            $("#editEvText").val("");
+                        } else if (editElcontent.trim() == data.elcontent.trim()) {
+                            layer.alert('未做任何修改！');
+                        } else {
+                            layer.confirm('确定要修改吗？', function (index) {
+                                $.ajax({
+                                    type: 'post',
+                                    url: '/appraise/editoneev',
+                                    data: {
+                                        elid: data.elid,
+                                        elcontent: editElcontent
+                                    },
+                                    success: function (editdata) {
+                                        if (editdata == true) {
+                                            layer.open({
+                                                content: '修改成功！',
+                                                yes: function (index) {
+                                                    layer.close(index);
+                                                    window.location.reload();
+                                                }
+                                            });
+                                        } else {
+                                            layer.msg('修改失败，请稍后重试！');
+                                        }
+                                    }
+                                });
+                                layer.close(index);
+                            });
+                        }
+
+
+                    }
+                });
+            } else if (obj.event === 'del') {
+                //删除问题
+                layer.confirm('确定要删除吗？', function (index) {
+                    $.ajax({
+                        type: 'post',
+                        url: '/appraise/deleteoneev',
+                        data: {
+                            elid: data.elid
+                        },
+                        success: function (deldata) {
+                            if (deldata == true) {
+                                obj.del();
+                                layer.open({
+                                    content: '删除成功！',
+                                    yes: function (index) {
+                                        layer.close(index);
+                                    }
+                                });
+                            } else {
+                                layer.msg('删除失败，请稍后重试！');
+                            }
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+
+        });
+
+
+    });
+
+
+</script>

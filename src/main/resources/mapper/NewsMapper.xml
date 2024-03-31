@@ -1,0 +1,24 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.NewsMapper">
+    <select id="findAllNews" resultType="NewsinfoDB">
+        select * from newsinfo
+        <where>
+            <if test="nid!=null and nid!=''">
+                nid =#{nid}
+            </if>
+        </where>
+        order by nid DESC
+    </select>
+    <insert id="addNews" parameterType="NewsinfoDB">
+        insert into newsinfo(ntitle,ncontent,nauthor) values(#{ntitle},#{ncontent},#{nauthor})
+    </insert>
+    <update id="editNews" parameterType="NewsinfoDB">
+        update newsinfo set ntitle=#{ntitle},ncontent=#{ncontent},nauthor=#{nauthor} where nid=#{nid}
+    </update>
+    <delete id="deleteNews" parameterType="Integer">
+        delete from newsinfo where nid=#{nid}
+    </delete>
+</mapper>

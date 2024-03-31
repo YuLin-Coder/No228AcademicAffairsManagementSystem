@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>选课管理</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+</head>
+<body>
+
+<form class="layui-form" style="padding: 10px;" id="fors">
+
+
+
+        <div class="layui-inline">
+            <label class="layui-form-label">系部名称</label>
+            <div class="layui-input-inline">
+                <select name="did" id="did" lay-filter="select" class="layui-input" lay-verify="required">
+                    <option value=""></option>
+                </select>
+            </div>
+
+
+        </div>
+
+    <div class="layui-inline">
+        <label class="layui-form-label">专业名称</label>
+        <div class="layui-input-inline">
+            <select name="mid" id="mid" lay-filter="selMa" class="layui-input" lay-verify="required">
+                <option value=""></option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-inline">
+        <label class="layui-form-label">年级名称</label>
+        <div class="layui-input-inline">
+            <select name="gid" id="gid" lay-filter="selGr" class="layui-input" lay-verify="required">
+                <option value=""></option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-inline">
+        <label class="layui-form-label">班级名称</label>
+        <div class="layui-input-inline">
+            <select name="classid" id="classid" lay-filter="selCl" class="layui-input" lay-verify="required">
+                <option value=""></option>
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-inline">
+        <label class="layui-form-label">学生名称</label>
+        <div class="layui-input-inline">
+            <select name="sname" id="sid" lay-filter="selSt" class="layui-input" lay-verify="editSelGrade" lay-search>
+                <option value=""></option>
+            </select>
+
+        </div>
+    </div>
+
+</form>
+
+<!--换课的弹出层-->
+<div style="display: none;padding: 20px" id="saveOrUpdateDiv" >
+    <form class="layui-form"  lay-filter="dataFrm" id="dataFrm">
+        <div class="layui-form-item">
+
+
+
+            <div class="layui-inline">
+                <label class="layui-form-label">请选课程:</label>
+                <div class="layui-input-inline">
+                    <select name="ccd" id="cid" lay-filter="selCo" class="layui-input" lay-verify="required">
+                        <option value=""></option>
+                    </select>
+
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" name="sid"  autocomplete="off">
+        <input type="hidden" name="cid"  autocomplete="off">
+
+        <div class="layui-form-item" style="text-align: center;">
+            <div class="layui-input-block">
+                <button type="button" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" id="yu" lay-submit="">提交</button>
+            </div>
+        </div>
+    </form>
+
+</div>
+<!-- 数据表格开始 -->
+<table class="layui-hide" id="userTable" lay-filter="userTable"></table>
+<script>
+    var tableIns;
+    layui.use([ 'jquery', 'layer', 'form', 'table'], function() {
+        var $ = layui.jquery;
+        var layer = layui.layer;
+        var form = layui.form;
+        var table = layui.table;
+
+
+        //渲染数据表格
+        tableIns=table.render({
+            elem: '#userTable'   //渲染的目标对象
+            ,url:'selSc' //数据接口
+            ,title: '选课表'//数据导出来的标题
+            ,toolbar:"#userToolBar"   //表格的工具条
+            ,cellMinWidth:200 //设置列的最小默认宽度
+            ,page: 1  //是否启用分页, limits: [10, 20, 30]
+            ,limit: 10//每页数据默认采用
+            ,cols: [
+                [   //列表数据
+
+
+                    {field:'scid', title:'ID',align:'center',width:"130",sort: true}
+                    ,{field:'stuid', title:'学号',align:'center',width:"130"}
+
+                    ,{field:'sname', title:'学生名',align:'center',width:"150",sort: true}
+                    ,{field:'cname', title:'课程名',align:'center',width:"200",sort: true}
+                    ,{field:'classname', title:'班级名字',align:'center',width:"200",sort: true}
+                    ,{field:'studytype', title:'班级名字',align:'center',width:"200",sort: true}
+
+                    ,{fixed: '', title:'操作',align:'center',width:'270',templet:function(data){
+                        if(data.studytype=='选修'){
+                            return '<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">强制退课</a><a class="layui-btn layui-btn-danger layui-btn-xs" style="background-color: #fff979;" lay-event="dels">换课</a>'
+                        }else{
+                            return '必修不可操作';
+                        }
+
+
+                    }}
+                ]
+            ]
+        })
+        //监听行工具事件
+        table.on('tool(userTable)', function(obj){
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+            if(layEvent === 'del'){ //删除
+                layer.confirm('确定要为'+data.sname+'退选【'+data.cname+'】这个课程吗', function(index){
+                    //向服务端发送删除指令
+                    $.post("dropCous",{cid:data.cid,sid:data.sid},function(res){
+                        layer.msg(res);
+                        //刷新数据 表格
+                        tableIns.reload();
+                    })
+                });
+            }else if(layEvent === 'dels'){
+                openUpdate(data);
+            }
+        });
+        //打开修改页面
+        function openUpdate(data){
+            mainIndex=layer.open({
+                type:1,
+                title:'修改',
+                content:$("#saveOrUpdateDiv"),
+                area:['500px','300px'],
+                success:function(index){
+                    form.val("dataFrm",data);
+                    url="changesCou";
+                }
+            });
+        }
+        //提交
+        form.on("submit(doSubmit)",function(obj){
+            //序列化表单数据
+            var params=$("#dataFrm").serialize();
+            $.post(url,params,function(obj){
+                layer.msg(obj);
+                //关闭弹出层
+                layer.close(mainIndex)
+                //刷新数据 表格
+                tableIns.reload();
+            })
+        });
+        //渲染下拉框
+
+       $.ajax({
+            //要跳转的地址
+            url: 'selDe',
+            //数据类型
+            dataType: 'json',
+
+            //提交类型
+            type: 'post',
+            //查询成功后执行的方法
+
+            success: function (data) {
+
+                $.each(data, function (index, item) {
+                    $('#did').append(new Option(item.dname, item.did));// 下拉菜单里添加元素
+
+                });
+                form.render();
+            }
+
+        });
+        $.ajax({
+            //要跳转的地址
+            url: 'selCo',
+            //数据类型
+            dataType: 'json',
+
+            //提交类型
+            type: 'post',
+            //查询成功后执行的方法
+
+            success: function (data) {
+
+                $.each(data, function (index, item) {
+                    $('#cid').append(new Option(item.cname, item.cid));// 下拉菜单里添加元素
+
+                });
+                form.render();
+            }
+
+        });
+                //监听系
+               form.on("select(select)",function(obj){
+
+                    $('#mid').html("");
+                    $('#gid').html("");
+                    $('#classid').html("");
+                    $('#sid').html("");
+                    var did=  $("#did").val();
+
+                    $.ajax({
+                        //要跳转的地址
+                        url: 'selMa',
+                        //数据类型
+                        data:{
+                            did:did
+                        },
+                        dataType: 'json',
+                        //提交类型
+                        type: 'post',
+                        //查询成功后执行的方法
+
+                        success: function (obj) {
+                            $.each(obj, function (index, item) {
+                                $('#mid').append(new Option(item.mname,item.mid));// 下拉菜单里添加元素
+                            });
+                            form.render();
+
+                            var mid=  $("#mid").val();
+                            $.ajax({
+                                //要跳转的地址
+                                url: 'selGr',
+                                //数据类型
+                                data:{
+                                    mid:mid
+                                },
+                                dataType: 'json',
+                                //提交类型
+                                type: 'post',
+                                //查询成功后执行的方法
+
+                                success: function (oba) {
+                                    $.each(oba, function (index, item) {
+                                        $('#gid').append(new Option(item.gname,item.gid));// 下拉菜单里添加元素
+                                    });
+                                    form.render();
+                                    var gid=  $("#gid").val();
+                                   $.ajax({
+                                        //要跳转的地址
+                                        url: 'selCl',
+                                        //数据类型
+                                        data:{
+                                            gid:gid
+                                        },
+                                        dataType: 'json',
+                                        //提交类型
+                                        type: 'post',
+                                        //查询成功后执行的方法
+
+                                        success: function (objss) {
+                                            $.each(objss, function (index, item) {
+                                                $('#classid').append(new Option(item.classname,item.classid));// 下拉菜单里添加元素
+                                            });
+                                            form.render();
+                                            var classid=$("#classid").val();
+                                            $.ajax({
+                                                //要跳转的地址
+                                                url: 'selSt',
+                                                //数据类型
+                                                data:{
+                                                    classid:classid
+                                                },
+                                                dataType: 'json',
+                                                //提交类型
+                                                type: 'post',
+                                                //查询成功后执行的方法
+
+                                                success: function (objz) {
+                                                    $.each(objz, function (index, item) {
+                                                        $('#sid').append(new Option(item.sname,item.sname));// 下拉菜单里添加元素
+                                                    });
+                                                    form.render();
+
+                                                    //var params=$("#fors").serialize();//序列化表单
+                                                    var sname=$("#sid").val();
+
+                                                    tableIns.reload({
+                                                        url:"selSc?sname="+sname
+                                                    })
+
+                                                }
+                                            })
+
+                                        }
+                                    })
+                                }
+                            })
+
+                }
+                });
+
+                });
+
+
+
+
+
+
+
+
+        //-------------------------------以下是监听----------------------------------
+
+
+
+        //监听专业
+        form.on("select(selMa)",function(obj){
+
+            $('#gid').html("");
+            $('#classid').html("");
+            $('#sid').html("");
+
+            var mid=  $("#mid").val();
+
+            var mid=  $("#mid").val();
+            $.ajax({
+                //要跳转的地址
+                url: 'selGr',
+                //数据类型
+                data:{
+                    mid:mid
+                },
+                dataType: 'json',
+                //提交类型
+                type: 'post',
+                //查询成功后执行的方法
+
+                success: function (oba) {
+                    $.each(oba, function (index, item) {
+                        $('#gid').append(new Option(item.gname,item.gid));// 下拉菜单里添加元素
+                    });
+                    form.render();
+                    var gid=  $("#gid").val();
+                    $.ajax({
+                        //要跳转的地址
+                        url: 'selCl',
+                        //数据类型
+                        data:{
+                            gid:gid
+                        },
+                        dataType: 'json',
+                        //提交类型
+                        type: 'post',
+                        //查询成功后执行的方法
+
+                        success: function (objss) {
+                            $.each(objss, function (index, item) {
+                                $('#classid').append(new Option(item.classname,item.classid));// 下拉菜单里添加元素
+                            });
+                            form.render();
+                            var classid=$("#classid").val();
+                            $.ajax({
+                                //要跳转的地址
+                                url: 'selSt',
+                                //数据类型
+                                data:{
+                                    classid:classid
+                                },
+                                dataType: 'json',
+                                //提交类型
+                                type: 'post',
+                                //查询成功后执行的方法
+
+                                success: function (objz) {
+                                    $.each(objz, function (index, item) {
+                                        $('#sid').append(new Option(item.sname,item.sname));// 下拉菜单里添加元素
+                                    });
+                                    form.render();
+
+                                    //var params=$("#fors").serialize();//序列化表单
+                                    var sname=$("#sid").val();
+                                    //alert(params);
+                                    tableIns.reload({
+                                        url:"selSc?sname="+sname
+                                    })
+
+                                }
+                            })
+
+                        }
+                    })
+                }
+            })
+        });
+        //监听年级
+        form.on("select(selGr)",function(obj){
+            $('#classid').html("");
+            $('#sid').html("");
+            var gid=  $("#gid").val();
+
+            var gid=  $("#gid").val();
+            //var params=$("#fors").serialize();//序列化表单
+            var sname=$("#sid").val();
+            //alert(params);
+            tableIns.reload({
+                url:"selSc?sname="+sname
+            })
+            $.ajax({
+                //要跳转的地址
+                url: 'selCl',
+                //数据类型
+                data:{
+                    gid:gid
+                },
+                dataType: 'json',
+                //提交类型
+                type: 'post',
+                //查询成功后执行的方法
+
+                success: function (objss) {
+                    $.each(objss, function (index, item) {
+                        $('#classid').append(new Option(item.classname,item.classid));// 下拉菜单里添加元素
+                    });
+                    form.render();
+                    var classid=$("#classid").val();
+                    $.ajax({
+                        //要跳转的地址
+                        url: 'selSt',
+                        //数据类型
+                        data:{
+                            classid:classid
+                        },
+                        dataType: 'json',
+                        //提交类型
+                        type: 'post',
+                        //查询成功后执行的方法
+
+                        success: function (objz) {
+                            $.each(objz, function (index, item) {
+                                $('#sid').append(new Option(item.sname,item.sname));// 下拉菜单里添加元素
+                            });
+                            form.render();
+                            //var params=$("#fors").serialize();//序列化表单
+                            var sname=$("#sid").val();
+                            //alert(params);
+                            tableIns.reload({
+                                url:"selSc?sname="+sname
+                            })
+
+
+                        }
+                    })
+
+                }
+            })
+        });
+        //监听班级
+        form.on("select(selCl)",function(obj){
+
+            $('#sid').html("");
+            var classid=  $("#classid").val();
+            //var params=$("#fors").serialize();//序列化表单
+            var sname=$("#sid").val();
+            //alert(params);
+            tableIns.reload({
+                url:"selSc?sname="+sname
+            })
+            $.ajax({
+                //要跳转的地址
+                url: 'selSt',
+                //数据类型
+                data:{
+                    classid:classid
+                },
+                dataType: 'json',
+                //提交类型
+                type: 'post',
+                //查询成功后执行的方法
+
+                success: function (objz) {
+                    $.each(objz, function (index, item) {
+                        $('#sid').append(new Option(item.sname,item.sname));// 下拉菜单里添加元素
+                    });
+                    form.render();
+                    //var params=$("#fors").serialize();//序列化表单
+                    var sname=$("#sid").val();
+                    //alert(params);
+                    tableIns.reload({
+                        url:"selSc?sname="+sname
+                    })
+
+
+                }
+            })
+        });
+        //监听学生
+        form.on("select(selSt)",function(obj){
+            //var params=$("#fors").serialize();//序列化表单
+            var sname=$("#sid").val();
+            //alert(params);
+            tableIns.reload({
+                url:"selSc?sname="+sname
+            })
+
+        });
+
+    });
+</script>
+</body>
+</html>

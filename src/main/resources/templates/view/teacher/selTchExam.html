@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>成绩查询</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+</head>
+<body>
+<div class="layui-form">
+    <div class="layui-inline" style="margin-top: 10px;margin-left: 30px">
+        教师编号：
+        <div class="layui-inline">
+            <input class="layui-input" name="tid" id="tid" autocomplete="off">
+        </div>
+        教师姓名：
+        <div class="layui-inline">
+            <input class="layui-input" name="tname" id="tname" autocomplete="off">
+        </div>
+    </div>
+
+<button class="layui-btn" type="button" id="selBtn" style="margin-top: 10px">开始搜索</button>
+</div>
+<table class="layui-hide" id="demo1" lay-filter="test"></table>
+<script>
+    layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider', 'jquery', 'form'], function() {
+        var laydate = layui.laydate ,//日期
+            laypage = layui.laypage, //分页
+            layer = layui.layer, //弹层
+            table = layui.table, //表格
+            carousel = layui.carousel, //轮播
+            upload = layui.upload, //上传
+            element = layui.element, //元素操作
+            slider = layui.slider,//滑块
+            form = layui.form;
+        //执行一个 table 实例
+        table.render({
+            elem: '#demo1'
+            ,height: 550
+            ,url: '/selTchExam' //数据接口
+            ,title: '成绩查询'
+            ,cols: [
+                [ //表头
+                    {field: 'tname', title: '教师姓名'}
+                    ,{field: 'tid', title: '教师工号'}
+                    ,{field: 'exam', title: '教评成绩'}
+                    ,{field: 'pcount', title: '教评人数'}
+                    ,{field: 'tetime', title: '成绩年份'}
+                    ,{field: 'semester', title: '成绩学期',templet: function (d) {
+                        if (d.semester =='1'){
+                            return '上学期'
+                        }else if (d.semester =='2'){
+                            return '下学期'
+                        }
+                    }}
+                ]
+            ]
+            , page: true
+            , even: true
+            , id: 'selTchExam'
+        });
+
+        //  按学期查询成绩
+        var $ = layui.$;
+        $('#selBtn').on('click', function(){
+            //获取输入框
+            var tid = $('#tid');
+            var tname = $('#tname');
+            //执行重载
+            table.reload('selTchExam', {
+                page: {
+                    curr: 1 //重新从第 1 页开始selTeacher
+                }
+                ,where: {
+                    tname: tname.val(),
+                    tid: tid.val()
+                }
+            });
+        });
+
+    });
+</script>
+</body>
+</html>

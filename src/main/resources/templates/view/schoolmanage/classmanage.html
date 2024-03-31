@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>班级管理</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/addnews.css}"/>
+
+
+</head>
+<style>
+    .layui-card {
+        box-shadow: #c0c0c0 0 1px 3px;
+    }
+
+    .layui-row .layui-form-item {
+        padding: 0 5px;
+    }
+
+</style>
+<body>
+<form class="layui-form layui-form-pane" style="padding: 10px;">
+
+    <div class="layui-row">
+        <div class="layui-col-xs12 layui-col-sm12 layui-col-md3">
+            <fieldset class="layui-elem-field">
+                <legend>精确查询</legend>
+                <div class="layui-field-box">
+                    <div class="layui-col-xs12">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">班级名称</label>
+                            <div class="layui-input-block">
+                                <select id="selByClassName" name="selByClassName" lay-filter="selByClassName"
+                                        lay-verify="selByClassName" lay-search></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="layui-col-xs12 layui-col-sm12 layui-col-md9">
+            <fieldset class="layui-elem-field">
+                <legend>分级/分类查询</legend>
+                <div class="layui-field-box">
+                    <div class="layui-col-xs12 layui-col-sm12 layui-col-md4">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">系部名称</label>
+                            <div class="layui-input-block">
+                                <select id="selByDpm" name="selByDpm" lay-filter="selByDpm" lay-verify="selByDpm"
+                                        lay-search></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-xs12 layui-col-sm12 layui-col-md4">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">专业名称</label>
+                            <div class="layui-input-block">
+                                <select id="selByMajor" name="selByMajor" lay-filter="selByMajor"
+                                        lay-verify="selByMajor" lay-search></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-col-xs12 layui-col-sm12 layui-col-md4">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">年级名称</label>
+                            <div class="layui-input-block">
+                                <select id="selByGrade" name="selByGrade" lay-filter="selByGrade"
+                                        lay-verify="selByGrade" lay-search></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+
+</form>
+<table id="evlist" lay-filter="gradeTable"></table>
+
+<div id="editDiv" style="display: none">
+
+    <form class="layui-form layui-form-pane" style="padding: 10px;">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属系别</label>
+            <div class="layui-input-block">
+                <select id="editSelDpm" name="editSelDpm" lay-filter="editSelDpm" lay-verify="editSelDpm"
+                        lay-search></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属专业</label>
+            <div class="layui-input-block">
+                <select id="editSelMajor" name="editSelMajor" lay-filter="editSelMajor" lay-verify="editSelMajor"
+                        lay-search></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属年级</label>
+            <div class="layui-input-block">
+                <select id="editSelGrade" name="editSelGrade" lay-filter="editSelGrade" lay-verify="editSelGrade"
+                        lay-search></select>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label" style="color: red;">请确保名称是全称。</label>
+            <div class="layui-input-block">
+                <textarea id="editClassText" placeholder="请输入名称" class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+<div id="addDiv" style="display: none">
+
+    <form class="layui-form layui-form-pane" style="padding: 10px;">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属系别</label>
+            <div class="layui-input-block">
+                <select id="addSelDpm" name="addSelDpm" lay-filter="addSelDpm" lay-verify="addSelDpm"
+                        lay-search></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属专业</label>
+            <div class="layui-input-block">
+                <select id="addSelMajor" name="addSelMajor" lay-filter="addSelMajor" lay-verify="addSelMajor"
+                        lay-search></select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属年级</label>
+            <div class="layui-input-block">
+                <select id="addSelGrade" name="addSelGrade" lay-filter="addSelGrade" lay-verify="addSelGrade"
+                        lay-search></select>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label" style="color: red;">请确保名称是全称。</label>
+            <div class="layui-input-block">
+                <textarea id="addMajorText" placeholder="请输入名称" class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+</body>
+
+</html>
+<script type="text/html" id="barBtn">
+    <a class="layui-btn layui-btn-sm" lay-event="edit">编辑</a>
+</script>
+
+<script>
+    layui.use(['jquery', 'layer', 'form', 'table', 'laydate'], function () {
+        var $ = layui.$ //重点处
+            , layer = layui.layer
+            , form = layui.form
+            , table = layui.table
+            , layer = layui.layer
+            , laydate = layui.laydate;
+        var tableId;
+
+        //获取分页数据列表
+        tableId = table.render({
+            elem: '#evlist'
+            ,
+            url: '/schoolmanage/findallclass'
+            ,
+            cols: [
+                [
+                    {field: 'classid', title: '班级编号', width: 200}
+                    , {field: 'classname', title: '班级名称'}
+                    , {field: 'gname', title: '所属年级'}
+                    , {field: 'mname', title: '所属专业'}
+                    , {field: 'dname', title: '所属系部'}
+                    , {field: 'ccount', title: '班级人数'}
+                    , {fixed: 'right', title: '操作', toolbar: '#barBtn',width:100}
+                ]
+            ]
+            ,
+            page: true
+            ,
+            even: true
+            ,
+            id: 'tableReload',
+            toolbar: '<div><button type="button" lay-event="addClassBtn" class="layui-btn layui-btn-sm layui-btn-normal">添加班级</button></div>'
+        });
+
+        //添加时级联获取专业
+        form.on('select(addSelDpm)', function (seldata) {
+            //获取对应专业
+            $.ajax({
+                type: 'post',
+                url: '/schoolmanage/jlselmajor?page=1&limit=1000',
+                data: {
+                    did: seldata.value
+                },
+                success: function (alldata) {
+                    var result = alldata.data;
+                    var lists = '';
+                    for (var i in result) {
+                        lists += "<option value='" + result[i].mid + "'>" + result[i].mname + "</option>";
+                    }
+                    $('#addSelMajor').html(lists);
+                    //获取对应年级
+                    $.ajax({
+                        type: 'post',
+                        url: '/schoolmanage/jlselgrade?page=1&limit=1000',
+                        data: {
+                            mid: $("#addSelMajor option:selected").val()
+                        },
+                        success: function (alldata) {
+                            var result = alldata.data;
+                            var lists = '';
+                            for (var i in result) {
+                                lists += "<option value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                            }
+                            $('#addSelGrade').html(lists);
+                            form.render();
+                        }
+                    });
+                    form.render();
+                }
+            });
+        });
+        //添加时级联获取年级
+        form.on('select(addSelMajor)', function (seldata) {
+            //获取对应年级
+            $.ajax({
+                type: 'post',
+                url: '/schoolmanage/jlselgrade?page=1&limit=1000',
+                data: {
+                    mid: seldata.value
+                },
+                success: function (alldata) {var result = alldata.data;
+                    var lists = '';
+                    for (var i in result) {
+                        lists += "<option value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                    }
+                    $('#addSelGrade').html(lists);
+                    form.render();
+                }
+            });
+        });
+        //编辑时级联获取年级
+        form.on('select(editSelDpm)', function (seldata) {
+            //获取对应专业
+            $.ajax({
+                type: 'post',
+                url: '/schoolmanage/jlselmajor?page=1&limit=1000',
+                data: {
+                    did: seldata.value
+                },
+                success: function (alldata) {var result = alldata.data;
+                    var lists = '';
+                    for (var i in result) {
+                        lists += "<option value='" + result[i].mid + "'>" + result[i].mname + "</option>";
+                    }
+                    $('#editSelMajor').html(lists);
+                    //获取对应年级
+                    $.ajax({
+                        type: 'post',
+                        url: '/schoolmanage/jlselgrade?page=1&limit=1000',
+                        data: {
+                            mid: $("#editSelMajor option:selected").val()
+                        },
+                        success: function (alldata) {var result = alldata.data;
+                            var lists = '';
+                            for (var i in result) {
+                                lists += "<option value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                            }
+                            $('#editSelGrade').html(lists);
+                            form.render();
+                        }
+                    });
+                    form.render();
+                }
+            });
+
+        });
+        //编辑时级联获取年级
+        form.on('select(editSelMajor)', function (seldata) {
+            //获取对应年级
+            $.ajax({
+                type: 'post',
+                url: '/schoolmanage/jlselgrade?page=1&limit=1000',
+                data: {
+                    mid: seldata.value
+                },
+                success: function (alldata) {
+                    var result = alldata.data;
+                    var lists = '';
+                    for (var i in result) {
+                        lists += "<option value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                    }
+                    $('#editSelGrade').html(lists);
+                    form.render();
+                }
+            });
+        });
+        //头工具栏事件
+        table.on('toolbar(gradeTable)', function (obj) {
+            if (obj.event == 'addClassBtn') {
+                $("#addMajorText").val("");
+                //获取系部表
+                $.ajax({
+                    type: 'post',
+                    url: '/schoolmanage/findalldpm?page=1&limit=1000',
+                    data: {},
+                    success: function (adddata) {
+                        var result = adddata.data;
+                        var lists = '';
+                        for (var i in result) {
+                            lists += "<option value='" + result[i].did + "'>" + result[i].dname + "</option>";
+                        }
+                        $('#addSelDpm').html(lists);
+
+                        //获取对应专业
+                        $.ajax({
+                            type: 'post',
+                            url: '/schoolmanage/jlselmajor?page=1&limit=1000',
+                            data: {
+                                did: $("#addSelDpm option:selected").val()
+                            },
+                            success: function (alldata) {
+                                var result = alldata.data;
+                                var lists = '';
+                                for (var i in result) {
+                                    lists += "<option value='" + result[i].mid + "'>" + result[i].mname + "</option>";
+                                }
+                                $('#addSelMajor').html(lists);
+                                //获取对应年级
+                                $.ajax({
+                                    type: 'post',
+                                    url: '/schoolmanage/jlselgrade?page=1&limit=1000',
+                                    data: {
+                                        mid: $("#addSelMajor option:selected").val()
+                                    },
+                                    success: function (mdata) {
+                                        var result = mdata.data;
+                                        var lists = '';
+                                        for (var i in result) {
+                                            lists += "<option value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                                        }
+                                        $('#addSelGrade').html(lists);
+                                        form.render();
+                                    }
+                                });
+                                form.render();
+                            }
+                        });
+                        form.render();
+                    }
+                });
+
+                //弹出添加问题窗口
+                layer.open({
+                    type: 1,
+                    resize: false,
+                    area: ['600px', '500px'],
+                    title: '添加班级',
+                    content: $('#addDiv'),
+                    btn: ['确认添加', '取消'],
+                    yes: function (index) {
+                        var addCname = $("#addMajorText").val();
+                        if (addCname.trim() == "") {
+                            layer.alert('请输入年级名称！');
+                            $("#addMajorText").val("");
+                        } else {
+                            layer.confirm('确定要添加吗？', function (index) {
+                                $.ajax({
+                                    type: 'post',
+                                    url: '/schoolmanage/addoneclass',
+                                    data: {
+                                        classname: addCname,
+                                        gid: $("#addSelGrade option:selected").val()
+                                    },
+                                    success: function (adddata) {
+                                        if (adddata == true) {
+                                            layer.open({
+                                                content: '添加成功！',
+                                                yes: function (index) {
+                                                    layer.close(index);
+                                                    window.location.reload();
+                                                }
+                                            });
+                                        } else {
+                                            layer.msg('添加失败，请检查是否重复或稍后重试！');
+                                        }
+                                    }
+                                });
+                                layer.close(index);
+                            });
+                        }
+
+
+                    }
+                });
+            }
+        });
+        //监听工具条
+        table.on('tool(gradeTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') {
+                $("#editClassText").val(data.classname);
+                //获取系部表
+                $.ajax({
+                    type: 'post',
+                    url: '/schoolmanage/findalldpm?page=1&limit=1000',
+                    data: {},
+                    success: function (editdata) {var result = editdata.data;
+                        var lists = '';
+                        for (var i in result) {
+                            if (result[i].did == data.did) {
+                                lists += "<option selected value='" + result[i].did + "'>" + result[i].dname + "</option>";
+                            } else {
+                                lists += "<option value='" + result[i].did + "'>" + result[i].dname + "</option>";
+                            }
+
+                        }
+                        $('#editSelDpm').html(lists);
+                        //获取对应专业
+                        $.ajax({
+                            type: 'post',
+                            url: '/schoolmanage/jlselmajor?page=1&limit=1000',
+                            data: {
+                                did: $("#editSelDpm option:selected").val()
+                            },
+                            success: function (alldata) {
+                                var result = alldata.data;
+                                var lists = '';
+                                for (var i in result) {
+                                    if (result[i].mid == data.mid) {
+                                        lists += "<option selected value='" + result[i].mid + "'>" + result[i].mname + "</option>";
+                                    } else {
+                                        lists += "<option value='" + result[i].mid + "'>" + result[i].mname + "</option>";
+                                    }
+                                }
+                                $('#editSelMajor').html(lists);
+                                //获取对应年级
+                                $.ajax({
+                                    type: 'post',
+                                    url: '/schoolmanage/jlselgrade?page=1&limit=1000',
+                                    data: {
+                                        mid: $("#editSelMajor option:selected").val()
+                                    },
+                                    success: function (alldata) {var result = alldata.data;
+                                        var lists = '';
+                                        for (var i in result) {
+                                            if (result[i].gid == data.gid) {
+                                                lists += "<option selected value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                                            } else {
+                                                lists += "<option value='" + result[i].gid + "'>" + result[i].gname + "</option>";
+                                            }
+                                        }
+                                        $('#editSelGrade').html(lists);
+                                        form.render();
+                                    }
+
+                                });
+                                form.render();
+                            }
+                        });
+                        form.render();
+                    }
+
+                });
+
+
+                //编辑年级
+                layer.open({
+                    type: 1,
+                    resize: false,
+                    area: ['600px', '500px'],
+                    title: '编辑班级 班级编号：' + data.classid,
+                    content: $('#editDiv'),
+                    btn: ['提交修改', '取消'],
+                    yes: function (index) {
+                        var editCname = $("#editClassText").val();
+                        if (editCname.trim() == "") {
+                            layer.alert('请输入年级名称！');
+                            $("#editClassText").val("");
+                        } else if (editCname.trim() == data.gname.trim() && $("#editSelDpm option:selected").val() == data.did && $("#editSelMajor option:selected").val() == data.mid) {
+                            layer.alert('未做任何修改！');
+                        } else {
+                            layer.confirm('确定要修改吗？', function (index) {
+                                $.ajax({
+                                    type: 'post',
+                                    url: '/schoolmanage/editoneclass',
+                                    data: {
+                                        classid: data.classid,
+                                        classname: editCname,
+                                        gid: $("#editSelGrade option:selected").val()
+                                    },
+                                    success: function (editdata) {
+                                        if (editdata == true) {
+                                            layer.open({
+                                                content: '修改成功！',
+                                                yes: function (index) {
+                                                    layer.close(index);
+                                                    window.location.reload();
+                                                }
+                                            });
+                                        } else {
+                                            layer.msg('修改失败，请稍后重试！');
+                                        }
+                                    }
+                                });
+                                layer.close(index);
+                            });
+                        }
+
+
+                    }
+                });
+            }
+
+        });
+
+        /***************************************************************条件查询*********************************************************************/
+
+        /**
+         * 默认填充
+         */
+        //填充班级
+        $.ajax({
+            type: 'post',
+            url: '/schoolmanage/tjselclass?page=1&limit=1000',
+            data: {},
+            success: function (alldata) {
+
+                var result = alldata.data;
+                var lists = "<option value='all'>全部</option>";
+                for (var i in result) {
+                    lists += "<option value='" + result[i].classname + "'>" + result[i].classname + "</option>";
+                }
+                $('#selByClassName').html(lists);
+                form.render();
+            }
+        });
+        //填充系部
+        $.ajax({
+            type: 'post',
+            url: '/schoolmanage/tjseldpm?page=1&limit=1000',
+            data: {},
+            success: function (alldata) {
+
+                var result = alldata.data;
+                var lists = "<option value='all'>请选择</option>";
+                for (var i in result) {
+                    lists += "<option value='" + result[i].dname + "'>" + result[i].dname + "</option>";
+                }
+                $('#selByDpm').html(lists);
+                form.render();
+            }
+        });
+        //按班级名查询
+        form.on('select(selByClassName)', function (seldata) {
+            if(seldata.value=='all'){
+                tableId.reload({
+                    url : '/schoolmanage/findallclass'
+                });
+            }else{
+                tableId.reload({
+                    url : '/schoolmanage/findallclass?classname=' + seldata.value
+                });
+            }
+            $("#selByDpm option[value='all']").attr("selected", "selected");
+            $('#selByMajor').html("");
+            $('#selByGrade').html("");
+            form.render();
+        });
+        //按系名查询
+        form.on('select(selByDpm)', function (seldata) {
+            if(seldata.value=='all'){
+
+            }else{
+                tableId.reload({
+                    url : '/schoolmanage/findallclass?dname=' + seldata.value
+                });
+            }
+            //填充专业
+            $.ajax({
+                type: 'post',
+                url: '/schoolmanage/tjselmajor?page=1&limit=1000',
+                data: {
+                    dname:$("#selByDpm option:selected").val()
+                },
+                success: function (alldata) {
+
+                    var result = alldata.data;
+                    var lists = "<option value='all'>请选择</option>";
+                    for (var i in result) {
+                        lists += "<option value='" + result[i].mname + "'>" + result[i].mname + "</option>";
+                    }
+                    $('#selByMajor').html(lists);
+                    form.render();
+                }
+            });
+            $('#selByGrade').html("");
+            form.render();
+        });
+        //按专业名查询
+        form.on('select(selByMajor)', function (seldata) {
+            if(seldata.value=='all'){
+
+            }else{
+                tableId.reload({
+                    url : '/schoolmanage/findallclass?mname=' + seldata.value
+                });
+            }
+            //填充年级
+            $.ajax({
+                type: 'post',
+                url: '/schoolmanage/tjselgrade?page=1&limit=1000',
+                data: {
+                    mname:$("#selByMajor option:selected").val()
+                },
+                success: function (alldata) {
+
+                    var result = alldata.data;
+                    var lists = "<option value='all'>请选择</option>";
+                    for (var i in result) {
+                        lists += "<option value='" + result[i].gname + "'>" + result[i].gname + "</option>";
+                    }
+                    $('#selByGrade').html(lists);
+                    form.render();
+                }
+            });
+        });
+        //按年级名查询
+        form.on('select(selByGrade)', function (seldata) {
+            if(seldata.value=='all'){
+            }else{
+                tableId.reload({
+                    url : '/schoolmanage/findallclass?gname=' + seldata.value +'&mname='+$("#selByMajor option:selected").val()
+                });
+            }
+        });
+
+
+
+
+
+
+
+
+
+
+
+    });
+
+
+</script>

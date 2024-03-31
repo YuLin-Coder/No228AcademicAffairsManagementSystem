@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+</head>
+<body>
+<form class="layui-form layui-form-pane" lay-filter="stuform"  th:method="post">
+    <div class="layui-form-item" style="margin-top: 10px">
+        <label class="layui-form-label">学号：</label>
+        <div class="layui-input-inline">
+            <input name="username" class="layui-input" type="text"autocomplete="off" lay-verify="stuid" th:value="${stuid}" id="stuid" th:name="stuid" disabled>
+        </div>
+    </div>
+
+    <div class="layui-form-item" style="margin-top: 10px">
+        <label class="layui-form-label">姓名：</label>
+        <div class="layui-input-inline">
+            <input name="username" class="layui-input" type="text"autocomplete="off" lay-verify="sname" th:value="${sname}" id="sname" th:name="sname" disabled>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">退学理由</label>
+        <div class="layui-input-block">
+            <textarea placeholder="请输入内容" th:name="drreason" id="drreason" class="layui-textarea" lay-verify="drreason"></textarea>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn layui-btn-normal" lay-submit="" lay-filter="ti">提交</button>
+            <button class="layui-btn layui-btn-primary" type="reset">重置</button>
+        </div>
+    </div>
+
+</form>
+
+
+<script>
+    layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider', 'jquery', 'form'], function() {
+        var laydate = layui.laydate ,//日期
+            laypage = layui.laypage, //分页
+            layer = layui.layer, //弹层
+            table = layui.table, //表格
+            carousel = layui.carousel, //轮播
+            upload = layui.upload, //上传
+            element = layui.element, //元素操作
+            slider = layui.slider,//滑块
+            form = layui.form;
+        element.on('tab(demo)', function(data){
+            layer.tips('切换了 '+ data.index +'：'+ this.innerHTML, this, {
+                tips: 1
+            });
+        });
+        //  表单验证
+        form.verify({
+            drreason: function(value){
+                if($.trim(value).length<10){
+                    return '退学理由不能低于十个字';
+                }
+            }
+        });
+
+        var $ = layui.$;
+        //监听提交
+        form.on('submit(ti)', function(data){
+            var stuid = $("#stuid").val();
+            var drreason = $("#drreason").val();
+            //data.field表单所有信息;
+                //删除
+                layer.confirm('确定要对该学生执行退学措施吗？', function () {
+                    $.post("delStudent",{'stuid':stuid,"drreason":drreason},function(result)
+                        {
+                            layer.msg(
+                                result.msg, {
+                                    icon: 1,
+                                    time: 1000 //2秒关闭（如果不配置，默认是3秒）
+                                }, function(){
+                                    //刷新父页面
+                                    layer.close(layer.index);
+                                    window.parent.location.reload();
+                                });
+                        }
+                    );
+                });
+            return false;
+        });
+
+
+
+    });
+</script>
+
+</body>
+</html>

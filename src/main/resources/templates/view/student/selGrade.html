@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>成绩查询</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+</head>
+<body>
+   <div th:each="m:${selStudentMessage}" class="layui-form" style="margin-top: 20px">
+
+       <blockquote class="layui-elem-quote" style="margin: 5px 20px">
+           <span style="color: #9F9F9F">系部：</span>
+           <span th:text="${m.dname}" style="margin-right: 40px"></span>
+           <span style="color: #9F9F9F">行政班级：</span>
+           <span th:text="${m.gmc}"  style="margin-right: 35px"></span>
+           <span style="color: #9F9F9F">学号：</span>
+           <span th:text="${m.stuid}"  style="margin-right: 35px"></span>
+           <span style="color: #9F9F9F">姓名：</span>
+           <span th:text="${m.sname}"  style="margin-right: 35px"></span>
+           <span style="color: #9F9F9F">已获得学分：</span>
+           <span th:text="${redit}"  style="margin-right: 35px"></span>
+       </blockquote>
+       <div class="layui-inline" style="margin-top: 10px;margin-left: 30px">
+           <div class="layui-input-inline">
+               <select th:name="stime" th:id="stime" lay-search="" lay-verify="stime" id="stime"  lay-filter="stime">
+                   <option value="1">大一上学期</option>
+                   <option value="2">大一下学期</option>
+                   <option value="3">大二上学期</option>
+                   <option value="4">大二下学期</option>
+                   <option value="5">大三上学期</option>
+                   <option value="6">大三下学期</option>
+               </select>
+           </div>
+       </div>
+       <button class="layui-btn" type="button" id="selBtn" style="margin-top: 10px">开始搜索</button>
+   </div>
+   <table class="layui-hide" id="demo" lay-filter="test"></table>
+<script>
+    layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider', 'jquery', 'form'], function() {
+        var laydate = layui.laydate ,//日期
+            laypage = layui.laypage, //分页
+            layer = layui.layer, //弹层
+            table = layui.table, //表格
+            carousel = layui.carousel, //轮播
+            upload = layui.upload, //上传
+            element = layui.element, //元素操作
+            slider = layui.slider,//滑块
+            form = layui.form;
+        //执行一个 table 实例
+        table.render({
+            elem: '#demo'
+            ,height: 550
+            ,url: 'selGrade' //数据接口
+            ,title: '成绩查询'
+            ,cols: [
+                [ //表头
+                    {field: 'cname', title: '课程'}
+                    ,{field: 'ccredit', title: '学分'}
+                    ,{field: 'type', title: '类别'}
+                   // ,{field: 'studynature', title: '修读性质'}
+                    ,{field: 'normalexam', title: '平时成绩'}
+                    ,{field: 'testexam', title: '考试成绩'}
+                    ,{field: 'sumexam', title: '综合成绩'}
+                ]
+            ]
+            , id: 'selGrade'
+        });
+
+        //  按学期查询成绩
+        var $ = layui.$;
+        $('#selBtn').on('click', function(){
+            //获取输入框
+           var stime = $('#stime');
+            //执行重载
+            table.reload('selGrade', {
+                page: {
+                    curr: 1 //重新从第 1 页开始selTeacher
+                }
+                ,where: {
+                    stime: stime.val()
+                }
+            });
+        });
+
+    });
+</script>
+</body>
+</html>

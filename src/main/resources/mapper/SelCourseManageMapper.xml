@@ -1,0 +1,45 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.SelCourseManageMapper">
+    <select id="selDe" resultType="com.yuanlrc.school.entity.DepartmentDB">
+        select * from department
+    </select>
+    <select id="selMa" resultType="com.yuanlrc.school.entity.MajorDB" parameterType="Integer">
+        select * from major where did=#{did}
+    </select>
+    <select id="selGr" resultType="com.yuanlrc.school.entity.GradeDB" parameterType="Integer">
+        select * from grade where mid=#{mid}
+    </select>
+    <select id="selClass" resultType="com.yuanlrc.school.entity.ClassinfoDB" parameterType="Integer">
+        select * from classinfo where gid=#{gid}
+    </select>
+    <select id="selSt" resultType="com.yuanlrc.school.entity.StudentDB" parameterType="Integer">
+        select * from student where classid=#{classid} and is_del=0
+    </select>
+    <select id="selSc" parameterType="com.yuanlrc.school.entity.StuCourseVO" resultType="com.yuanlrc.school.entity.StuCourseVO">
+        select sc.*,s.stuid,s.sname,s.classid,c.cname,ci.classname,c.studytype from stu_course sc,student s,course c,classinfo ci where sc.sid=s.sid and c.cid=sc.cid
+        and ci.classid=s.classid and s.is_del=0
+        <if test="sname!=null and sname!=''">
+            and  sname like concat('%' ,concat(#{sname},'%'))
+        </if>
+
+    </select>
+
+    <delete id="dropcou" parameterType="Integer">
+        delete from stu_course where sid=#{sid} and cid=#{cid}
+    </delete>
+    <update id="updatecou" parameterType="Integer">
+        update course set cselcount=cselcount-1 where cid=#{cid}
+    </update>
+    <update id="changesCou" parameterType="Integer">
+        UPDATE stu_course set cid=#{ccd} where sid=#{sid} and cid=#{cid}
+    </update>
+    <select id="selCo" resultType="com.yuanlrc.school.entity.CourseDB">
+        select * from course
+    </select>
+    <select id="selStc" parameterType="Integer" resultType="Integer">
+      select count(*) from stu_course where cid=#{ccd} and sid=#{sid}
+    </select>
+</mapper>

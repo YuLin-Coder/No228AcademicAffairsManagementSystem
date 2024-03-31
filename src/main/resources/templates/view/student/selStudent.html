@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>NiceSchool教务系统</title>
+
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+
+</head>
+<body>
+
+    <div>
+        <form class="layui-form" style="margin-left: -60px">
+            <div class="layui-inline">
+                <label class="layui-form-label">系：</label>
+                <div class="layui-input-inline">
+                    <select th:name="did" lay-search="" lay-verify="required1" id="required1"  lay-filter="required1">
+                        <option th:value="0">请选择</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline" style="margin-left: -40px">
+                <label class="layui-form-label">专业：</label>
+                <div class="layui-input-inline">
+                    <select th:name="mid" lay-search="" lay-verify="required2" id="required2"  lay-filter="required2">
+                        <!--<option th:each="ma:${selMajor}" th:value="${ma.mid}" th:text="${ma.mname}"></option>-->
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline" style="margin-left: -40px">
+                <label class="layui-form-label">年级：</label>
+                <div class="layui-input-inline">
+                    <select th:name="gid" lay-search="" lay-verify="required3" id="required3"  lay-filter="required3">
+                        <!--<option th:each="gr:${selGrade}" th:value="${gr.gid}" th:text="${gr.gname}"></option>-->
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline" style="margin-left: -40px">
+                <label class="layui-form-label">班级：</label>
+                <div class="layui-input-inline">
+                    <select th:name="classid" lay-search="" lay-verify="required4" id="required4"  lay-filter="required4">
+                        <!--<option th:each="ca:${selCalss}" th:value="${ca.classid}" th:text="${ca.classname}"></option>-->
+                    </select>
+                </div>
+            </div>
+        </form>
+        <div class="demoTable"  style="margin-top: 10px;margin-left: 15px">
+            学生编号：
+            <div class="layui-inline">
+                <input class="layui-input" name="sid" id="demoReload" autocomplete="off">
+            </div>&nbsp;&nbsp;
+            学生姓名：
+            <div class="layui-inline">
+                <input class="layui-input" name="sid" id="demoReload1" autocomplete="off">
+            </div>
+        </div>
+        <button class="layui-btn" type="button" id="selBtn" style="margin-left: 580px;margin-top: -53px">开始搜索</button>
+        <button class="layui-btn" type="button" id="qxBtn"style="margin-top: -53px">取消搜索</button>
+        <table class="layui-hide" id="demo" lay-filter="test">
+        </table>
+        <script type="text/html" id="barDemo">
+            <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-xs" lay-event="examine">查看</a>
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">退学</a>
+
+
+        </script>
+
+
+    </div>
+
+    <script>
+        layui.use(['laydate', 'laypage', 'layer', 'table', 'carousel', 'upload', 'element', 'slider', 'jquery', 'form'], function() {
+            var laydate = layui.laydate ,//日期
+            laypage = layui.laypage, //分页
+                layer = layui.layer, //弹层
+                table = layui.table, //表格
+                carousel = layui.carousel, //轮播
+                upload = layui.upload, //上传
+                element = layui.element, //元素操作
+                slider = layui.slider,//滑块
+                form = layui.form;
+                element.on('tab(demo)', function(data){
+                    layer.tips('切换了 '+ data.index +'：'+ this.innerHTML, this, {
+                        tips: 1
+                    });
+                });
+
+                if(1==1){
+                    layui.$.ajax({
+                        type : 'post',
+                        url : "selDepartment",
+                        dataType:'json',
+                        success : function(result) {
+                            var data = result.data;
+                            $.each(data, function (index, obj) {
+                                layui.$("#required1").append("<option value='"+obj.did+"'>"+obj.dname+"</option>");
+                            });
+                            form.render('select');
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                            layui.layer.msg(XMLHttpRequest.responseText);
+                        }
+                    });
+                }
+            //  监听系部下拉框 根据所选系部查询专业
+            form.on('select(required1)', function(data){
+                if(data.value==0){
+                    layui.$('#required2').html("");
+                    layui.$('#required3').html("");
+                    layui.$('#required4').html("");
+                    form.render();
+                }
+                //  若系部下拉框值不等于0
+                else{
+                    //  移除专业下拉框所有值
+                    $("#required2").html("");
+                    $("#required3").html("");
+                    $("#required4").html("");
+                    layui.$.ajax({
+                        type : 'post',
+                        url : "selectdid",
+                        data : {
+                            'did' : data.value
+                        },
+                        dataType:'json',
+                        success : function(result) {
+                            var data = result.data;
+                            $.each(data, function (index, obj) {
+                                layui.$("#required2").append("<option value='" + obj.mid + "'>" + obj.mname + "</option>");
+                            });
+                            form.render('select');
+                            //  监听专业
+                            var required2 = $("#required2").val();
+                            $("#required3").find("option").remove();
+                            $("#required4").find("option").remove();
+                            if(required2!=0){
+                                layui.$.ajax({
+                                    type : 'post',
+                                    url : "selectmid",
+                                    data : {
+                                        'mid' : required2
+                                    },
+                                    dataType:'json',
+                                    success : function(result) {
+                                        var data = result.data;
+                                        $.each(data, function (index, obj) {
+                                                layui.$("#required3").append("<option value='"+obj.gid+"'>"+obj.gname+"</option>");
+
+                                        });
+                                        form.render('select');
+                                        //  监听年级
+                                        var required3 = $("#required3").val();
+                                        $("#required4").find("option").remove();
+                                        if(required3!=null){
+                                            layui.$.ajax({
+                                                type : 'post',
+                                                url : "selectgid",
+                                                data : {
+                                                    'gid' : required3
+                                                },
+                                                dataType:'json',
+                                                success : function(result) {
+                                                    var data = result.data;
+                                                    $.each(data, function (index, obj) {
+                                                        layui.$("#required4").append("<option value='"+obj.classid+"'>"+obj.classname+"</option>");
+                                                    });
+                                                    form.render('select');
+                                                },
+                                                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                                                    layui.layer.msg(XMLHttpRequest.responseText);
+                                                }
+                                            });
+                                        }
+                                    },
+                                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                                        layui.layer.msg(XMLHttpRequest.responseText);
+                                    }
+                                });
+                            }
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                            layui.layer.msg(XMLHttpRequest.responseText);
+                        }
+                    });
+                }
+            });
+
+            //  监听专业下拉框 根据所选系部查询专业
+            form.on('select(required2)', function(data){
+                //  移除专业下拉框所有值
+                $("#required3").find("option").remove();
+                $("#required4").find("option").remove();
+                //  若系部下拉框值不等于0
+                if(data.value!=0){
+                    layui.$.ajax({
+                        type : 'post',
+                        url : "selectmid",
+                        data : {
+                            'mid' : data.value
+                        },
+                        dataType:'json',
+                        success : function(result) {
+                            var data = result.data;
+                            $.each(data, function (index, obj) {
+                                layui.$("#required3").append("<option value='"+obj.gid+"'>"+obj.gname+"</option>");
+                            });
+                            form.render('select');
+                            //  监听年级
+                            var required3 = $("#required3").val();
+                            $("#required4").find("option").remove();
+                            if(required3!=null){
+                                layui.$.ajax({
+                                    type : 'post',
+                                    url : "selectgid",
+                                    data : {
+                                        'gid' : required3
+                                    },
+                                    dataType:'json',
+                                    success : function(result) {
+                                        var data = result.data;
+                                        $.each(data, function (index, obj) {
+                                            layui.$("#required4").append("<option value='"+obj.classid+"'>"+obj.classname+"</option>");
+                                        });
+                                        form.render('select');
+                                    },
+                                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                                        layui.layer.msg(XMLHttpRequest.responseText);
+                                    }
+                                });
+                            }
+
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                            layui.layer.msg(XMLHttpRequest.responseText);
+                        }
+                    });
+                }
+            });
+            //  监听年级下拉框 根据所选年级查询班级
+            form.on('select(required3)', function(data){
+                //  移除专业下拉框所有值
+                $("#required4").find("option").remove();
+                //  若系部下拉框值不等于0
+                if(data.value!=0){
+                    layui.$.ajax({
+                        type : 'post',
+                        url : "selectgid",
+                        data : {
+                            'gid' : data.value
+                        },
+                        dataType:'json',
+                        success : function(result) {
+                            var data = result.data;
+                            $.each(data, function (index, obj) {
+                                layui.$("#required4").append("<option value='"+obj.classid+"'>"+obj.classname+"</option>");
+                            });
+                            form.render('select');
+                        },
+                        error: function(XMLHttpRequest, textStatus, errorThrown) {
+                            layui.layer.msg(XMLHttpRequest.responseText);
+                        }
+                    });
+                }
+            });
+            table.render({
+                elem: '#demo',
+                height: 520,
+                url: 'selStudent', //数据接口
+                title: '用户表',
+                page: true //开启分页
+                ,limits:[5,10,15],
+                cols: [
+                    [ //表头
+                        //{field: "sid", title: '学生编号'},
+                        {field: "stuid", title: '学号'},
+                        {field: "sname", title: '姓名'},
+                        {field: "sgender", title: '性别'},
+                        // {field: "sbirthday", title: '出生日期',templet:"<div>{{layui.util.toDateString(d.sbirthday, 'yyyy年MM月dd日')}}</div>"},
+                        //{field: "pname", title: '政治面貌'},
+                        //{field: "snation", title: '民族'},
+                        //{field: "scardid", title: '身份证号'},
+                        //{field: "sphone", title: '手机号'},
+                        //{field: "saddress", title: '地址'},
+                        {field: "stustate", title: '状态'},
+                        {field: "classname", title: '班级'},
+                        {fixed: 'right',title:'操作', width: 165, align:'center', toolbar: '#barDemo'}
+                    ]]
+                , id: 'selStudent',
+                done: function (res, curr, count) {
+                    $("[data-field='stustate']").children().each(function () {
+                        if ($(this).text() == 0) {
+                            $(this).text("注册学籍")
+                        }
+                        if($(this).text() == 1){
+                            $(this).text("保留学籍")
+                        }
+                        if($(this).text() == 2){
+                            $(this).text("已离校")
+                        }
+                    });
+                }
+            });
+
+            //监听头工具栏事件
+            table.on('toolbar(test)', function(obj){
+                var checkStatus = table.checkStatus(obj.config.id)
+                    ,data = checkStatus.data; //获取选中的数据
+                switch(obj.event){
+                    case 'add':
+                        //添加
+                        layer.open({
+                            type:2,      //layer的5种层类型   0（信息框，默认）、1（页面层）、2（iframe层）、3（加载层）、4（tips层）
+                            title: ['新增', 'font-size:18px;'],  //弹出框标题
+                            area: ['800px','350px'],    //设置弹框的大小
+                            shadeClose:true,          //点击遮罩层外区域关闭遮罩层
+                            anim: 2,              //弹出动画
+                            content:'add'     //写方法的路径  进入页面  此处也和easyui相同
+                        })
+                        break;
+                    case 'update':
+                        if(data.length === 0){
+                            layer.msg('请选择一行');
+                        } else if(data.length > 1){
+                            layer.msg('只能同时编辑一个');
+                        } else {
+                            // layer.alert('编辑 [id]：'+ checkStatus.data[0].id);
+                            //修改
+                            layer.open({
+                                type: 2, //layer的5种层类型   0（信息框，默认）1（页面层）2（iframe层）3（加载层）4（tips层）
+                                title: ['修改数据', 'font-size:18px;'],  //弹出框标题
+                                shade: [0.5, '#393D49'],     //遮罩层
+                                shadeClose:true,          //点击遮罩层外区域关闭遮罩层
+                                area: ['580px', '500px'],    //弹出框大小
+                                anim: 1,              //弹出动画
+                                content:'selStudentId?id='+checkStatus.data[0].sid
+                            });
+                        }
+                        break;
+                    case 'delete':
+                        if(data.length === 0){
+                            layer.msg('请选择一行');
+                        } else {
+                            //删除
+                            layer.confirm('真的要删除吗？', function () {
+                                $.post("delete",{'id':checkStatus.data[0].id},function(result)
+                                    {
+                                        layer.msg(
+                                            result.msg, {
+                                                icon: 1,
+                                                time: 1000 //2秒关闭（如果不配置，默认是3秒）
+                                            }, function(){
+                                                //刷新父页面
+                                                parent.window.location.reload();
+                                            });
+                                    }
+                                );
+                            });
+                        }
+                        break;
+                };
+            });
+            //监听行工具事件
+            table.on('tool(test)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+                var data = obj.data //获得当前行数据
+                    ,layEvent = obj.event; //获得 lay-event 对应的值
+                //修改
+                if(layEvent === 'edit'){
+                    top.layer.open({
+                        type: 2, //layer的5种层类型   0（信息框，默认）1（页面层）2（iframe层）3（加载层）4（tips层）
+                        title: ['修改学生信息', 'font-size:18px;'],  //弹出框标题
+                        shade: [0.5, '#393D49'],     //遮罩层
+                        shadeClose:true,          //点击遮罩层外区域关闭遮罩层
+                        area: ['580px', '500px'],   //弹出框大小
+                        anim: 1,              //弹出动画
+                        content:'selStudentId?id='+data.sid
+                    });
+                }
+                //查看详情
+                if(layEvent === 'examine'){
+                    top.layer.open({
+                        type: 2, //layer的5种层类型   0（信息框，默认）1（页面层）2（iframe层）3（加载层）4（tips层）
+                        title: ['学生信息', 'font-size:18px;'],  //弹出框标题
+                        shade: [0.5, '#393D49'],     //遮罩层
+                        shadeClose:true,          //点击遮罩层外区域关闭遮罩层
+                        area: ['800px', '500px'],   //弹出框大小
+                        anim: 1,              //弹出动画
+                        content:'selectMessage?id='+data.sid,
+                    });
+                }
+
+
+                if(layEvent == 'del'){
+                    top.layer.open({
+                        type: 2, //layer的5种层类型   0（信息框，默认）1（页面层）2（iframe层）3（加载层）4（tips层）
+                        title: ['退学', 'font-size:18px;'],  //弹出框标题
+                        shade: [0.5, '#393D49'],     //遮罩层
+                        shadeClose:true,          //点击遮罩层外区域关闭遮罩层
+                        area: ['600px', '400px'],   //弹出框大小
+                        anim: 1,              //弹出动画
+                        content:'insertDropout?stuid='+data.stuid+"&sname="+data.sname
+                    });
+                }
+                // //  删除学生
+                // if(layEvent == 'del'){
+                //     //删除
+                //     layer.confirm('确定要对该学生执行退学措施吗？', function () {
+                //         $.post("delStudent",{'stuid':data.stuid},function(result)
+                //             {
+                //                 layer.msg(
+                //                     result.msg, {
+                //                         icon: 1,
+                //                         time: 1000 //2秒关闭（如果不配置，默认是3秒）
+                //                     }, function(){
+                //                         obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                //                         layer.close(index);
+                //                     });
+                //             }
+                //         );
+                //     });
+                // }
+
+
+            });
+
+
+            //分页
+            laypage.render({
+                elem: 'pageDemo' //分页容器的id
+                ,count: 100 //总页数
+                ,skin: '#1E9FFF' //自定义选中色值
+                //,skip: true //开启跳页
+                ,jump: function(obj, first){
+                    if(!first){
+                        layer.msg('第'+ obj.curr +'页', {offset: 'b'});
+                    }
+                }
+            });
+
+            /*条件查询按钮*/
+            //  根据学生姓名查询
+            var $ = layui.$;
+            $('#selBtn').on('click', function(){
+                //获取输入框
+                var did = $('#required1');
+                var mid = $('#required2');
+                var gid = $('#required3');
+                var classid = $('#required4');
+                var stuid = $('#demoReload');
+                var sname = $('#demoReload1');
+                //执行重载
+                table.reload('selStudent', {
+                    page: {
+                        curr: 1 //重新从第 1 页开始
+                    }
+                    ,where: {
+                        did: did.val(),
+                        mid: mid.val(),
+                        gid: gid.val(),
+                        classid: classid.val(),
+                        stuid: stuid.val(),
+                        sname: sname.val()
+                    }
+                });
+            });
+
+          //    取消查询
+            var $ = layui.$;
+            $('#qxBtn').on('click', function(){
+                window.location.reload();
+            });
+
+        });
+    </script>
+
+</body>
+</html>

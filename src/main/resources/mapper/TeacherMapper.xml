@@ -1,0 +1,40 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.TeacherMapper">
+   <!-- 查询所有教师 -->
+    <select id="selTeacher" resultType="map" parameterType="map">
+        select * from teacher t,politics_type pt
+        <where>t.pid = pt.pid and t.is_del = 0
+          <if test="tchid!=null and tchid!=''">
+              and t.tchid like concat('%',concat(#{tchid},'%'))
+          </if>
+          <if test="tname!=null and tname!=''">
+              and t.tname like concat('%',concat(#{tname},'%'))
+          </if>
+      </where>ORDER BY t.tid desc LIMIT #{begin},#{end}
+    </select>
+
+    <!-- 查询所有教师数量 -->
+    <select id="selTeacherCount" resultType="int">
+        select count(*) from teacher t,politics_type pt
+        <where>t.pid = pt.pid and t.is_del = 0
+            <if test="tchid!=null and tchid!=''">
+                and t.tchid like concat('%',concat(#{tchid},'%'))
+            </if>
+            <if test="tname!=null and tname!=''">
+                and t.tname like concat('%',concat(#{tname},'%'))
+            </if>
+        </where> ORDER BY t.tid desc
+    </select>
+    <!-- 根据教师编号查询教师信息 -->
+    <select id="selTeacherId" resultType="TeacherDB">
+        select * from teacher where tid = #{tid}
+    </select>
+    <!-- 修改教师信息  -->
+    <update id="updTeacher" parameterType="TeacherDB">
+        update teacher set tname=#{tname},tgender=#{tgender},tbirthday=#{tbirthday},pid=#{pid},tnation=#{tnation},tcardid=#{tcardid},
+        tphone=#{tphone},taddress=#{taddress},tchstate=#{tchstate} where tid=#{tid}
+    </update>
+</mapper>

@@ -1,0 +1,63 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.AppraiseMapper">
+    <!--查询全部对应教评的老师-->
+    <select id="findAllTch" resultType="SelEvRecardVO">
+select DISTINCT tc.*,c.cname from teacher tc,tch_course tco,tch_class tcl,course c,student s where
+tc.tid = tco.tid and tco.cid = c.cid and tc.tid = tcl.tid and tcl.classid = s.classid and s.sid = #{stuid}
+    </select>
+    <!--查询全部教评题目-->
+    <select id="findAllTM" resultType="EvaluateListDB">
+       select * from evaluate_list
+    </select>
+    <!--查询教评状态-->
+    <select id="selOneState" resultType="Integer">
+       select count(*) from evaluate_record where stuid=#{stuid} and tchid=#{tchid}
+    </select>
+    <!--添加教评记录-->
+    <insert id="addOneAppraise" parameterType="EvTchVO">
+        insert into evaluate_record(stuid,tchid,erexam,is_del) values(#{stuid},#{tchid},#{erexam},0)
+    </insert>
+    <!--判断是否有教师成绩记录-->
+    <select id="selTchExamState" resultType="Integer">
+        select count(*) from tch_exam where tid=#{tid} and year(tetime)=year(now()) and semester = (select case
+        when (select month(now()))=1
+        then 1
+        when (select month(now()))&gt;=9 and (select month(now()))&lt;=12
+        then 1
+        when (select month(now()))&gt;=2 and (select month(now()))&lt;=6
+        then 2
+        else 0
+        end)
+    </select>
+    <!--添加教师分数及教评人数-->
+    <update id="addOneTchExam" parameterType="EvTchVO">
+        insert into tch_exam(tid,exam,pcount,tetime,semester,is_del) values(#{tid},#{exam},#{pcount},now(),(select case
+        when (select month(now()))=1
+        then 1
+        when (select month(now()))&gt;=9 and (select month(now()))&lt;=12
+        then 1
+        when (select month(now()))&gt;=2 and (select month(now()))&lt;=6
+        then 2
+        else 0
+        end),0)
+    </update>
+    <!--更新教师分数及教评人数-->
+    <update id="updOneTchExam" parameterType="EvTchVO">
+        update tch_exam set exam=exam+#{erexam},pcount=pcount+1 where tid=#{tid}
+    </update>
+    <!--编辑问题-->
+    <update id="editOneEv" parameterType="EvaluateListDB">
+        update evaluate_list set elcontent=#{elcontent} where elid=#{elid}
+    </update>
+    <!--删除问题-->
+    <delete id="deleteOneEv" parameterType="Integer">
+        delete from evaluate_list where elid=#{elid}
+    </delete>
+    <!--添加问题-->
+    <insert id="addOneEv" parameterType="EvaluateListDB">
+        insert into evaluate_list(elcontent) values(#{elcontent})
+    </insert>
+</mapper>

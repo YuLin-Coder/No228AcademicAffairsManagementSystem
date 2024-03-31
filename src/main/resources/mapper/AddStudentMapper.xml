@@ -1,0 +1,74 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.AddStudentMapper">
+    <!-- 根据前台传来信息添加学生 -->
+    <insert id="addStudent" parameterType="studentVO">
+        insert into student(sid,stuid,sname,sgender,sbirthday,pid,snation,scardid,sphone,saddress,entertime,classid)
+        values(#{sid},#{stuid},#{sname},#{sgender},#{sbirthday},#{pid},#{snation},#{scardid},#{sphone},#{saddress},#{entertime},#{classid})
+    </insert>
+    <!-- 根据学生专业查询该专业开设的必修课程 -->
+    <select id="selCourse" resultType="CourseDB">
+        select * from course where studytype = '必修' and mid = #{mid}
+    </select>
+    <!-- 根据学号查询学生id编号 -->
+    <select id="selectSid" resultType="int">
+        select sid from student where stuid = #{stuid}
+    </select>
+    <!-- 将学生id以及必修课程的id添加至学生选课表 -->
+    <insert id="addStuCourse" parameterType="int">
+        insert into stu_course(sid,cid) values(#{param1},#{param2})
+    </insert>
+    <!-- 生成学生学号 -->
+    <select id="selStuid" resultType="String">
+      select max(stuid)+1 from student where substring(stuid,1,4) = (select substring(gname,1,4) from grade where gid=#{param1})
+    </select>
+    <!-- 判断该年份是否已存在学生 -->
+    <select id="selectStuYear" resultType="int">
+        select case
+        when (select count(*) from student where substring(stuid,1,4) = (select substring(gname,1,4) from classinfo c left join grade g on c.gid = g.gid where c.classid=#{classid}))=0
+        then (select  CAST((select substring(gname,1,4)) AS UNSIGNED int) from classinfo c left join grade g on c.gid = g.gid where c.classid=#{classid})
+        else 0
+        end
+    </select>
+
+    <!-- 若该年份学生为空时 则添加一条分割线 -->
+    <insert id="stuSegmentation" parameterType="int">
+        insert into student values((select  CAST((select concat(substring(gname,1,4),'0000')) AS UNSIGNED int) from classinfo c left join grade g on c.gid = g.gid where c.classid=#{classid}),
+        (select  CAST((select concat(substring(gname,1,4),'0000')) AS UNSIGNED int) from classinfo c left join grade g on c.gid = g.gid where c.classid=#{classid}),
+        '年份过渡数据','年份过渡数据',now(),1,'年份过渡数据','年份过渡数据','年份过渡数据','年份过渡数据',now(),now(),1,#{classid},1,111111)
+    </insert>
+
+    <!-- 班级表人数+1 -->
+    <update id="selecteClassinfo" parameterType="int">
+      update classinfo set ccount=ccount+1 where classid = #{classid}
+    </update>
+
+    <!-- 年级人数+1 -->
+    <update id="selecteGrade" parameterType="int">
+      update grade set gcount=gcount+1 where gid = #{gid}
+    </update>
+
+    <!-- 专业人数+1 -->
+    <update id="selecteMajor" parameterType="int">
+      update major set mcount=mcount+1 where mid = #{mid}
+    </update>
+
+    <!-- 系部人数+1 -->
+    <update id="selecteDepartment" parameterType="int">
+      update department set dcount=dcount+1 where did = #{did}
+    </update>
+
+    <!-- 根据学号查询信息 -->
+    <select id="selectMessage" resultType="StudentDB">
+        select * from student where stuid = #{stuid}
+    </select>
+
+    <!-- 查询sys_role角色id -->
+    <select id="selectRole" resultType="String">
+        select id from sys_role where name = '学生'
+    </select>
+
+
+</mapper>

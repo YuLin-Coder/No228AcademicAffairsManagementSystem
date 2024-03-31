@@ -1,0 +1,65 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.TchCourseMapper">
+    <!--查询全部教师-->
+    <select id="findAllTch" resultType="TeacherDB">
+        select * from teacher where is_del=0
+        <if test="tchid != null">
+            and tchid=#{tchid}
+        </if>
+        <if test="tname != null">
+            and tname=#{tname}
+        </if>
+    </select>
+    <!--查询全部教师姓名-->
+    <select id="findAllTchByName" resultType="TeacherDB">
+        select * from teacher where is_del=0 group by tname order by tid
+    </select>
+    <!--通过专业查询全部课程-->
+    <select id="findAllCourseByMajorName" resultType="TchCourseVO">
+        select * from course where mid in(select mid from major where mname = #{mname})
+    </select>
+    <!--查询级联班级-->
+    <select id="findTchCourseClassName" resultType="ClassinfoDB">
+        select * from classinfo where gid = #{gid}
+    </select>
+    <!--查询周-->
+    <select id="findAllWeeks" resultType="WeeksDB">
+        select * from weeks
+    </select>
+    <!--查询节段-->
+    <select id="findAllSchedule" resultType="ScheduleDB">
+        select * from schedule
+    </select>
+    <!--添加教师授课表记录并返回新数据id-->
+    <insert id="addOneTchCourse" parameterType="TchCourseVO">
+        insert into tch_course(tid,cid,wid,schid,gid) values(#{tid},#{cid},#{wid},#{schid},#{gid})
+        <selectKey keyProperty="tcid" resultType="Integer">
+            select LAST_INSERT_ID() as tcid
+        </selectKey>
+    </insert>
+    <!--添加教师授班表记录-->
+    <insert id="addOneTchClass" parameterType="TchCourseVO">
+        insert into tch_class(tid,classid,tcid) values(#{tid},#{classid},#{tcid})
+    </insert>
+    <!--查询是否有重复授课-->
+    <select id="findTchCourseFlag" parameterType="TchCourseVO" resultType="Integer">
+        select count(*) from tch_class where tid=#{tid} and classid=#{classid} and tcid in(select tcid from tch_course where tid=#{tid} and cid=#{cid} and gid=#{gid} and is_del=0) and is_del=0
+    </select>
+    <!--查询是否有冲突授课-->
+    <select id="findTchCourseDanger" parameterType="TchCourseVO" resultType="Integer">
+        select count(*) from tch_class where classid=#{classid} and tcid in(select tcid from tch_course where cid=#{cid} and gid=#{gid} and is_del=0) and is_del=0
+    </select>
+    <!--查询指定老师教授所有课程-->
+    <select id="findCourseByTch" resultType="TchCourseVO">
+        select tc.tcid,tcs.tcsid,tcs.tid,classname,cname,gname,tname from tch_class tcs,tch_course tc,
+classinfo ci,course cr,grade gr,teacher t where tcs.tcid=tc.tcid and ci.classid=tcs.classid
+and tc.gid=gr.gid and cr.cid=tc.cid and t.tid=tcs.tid and tc.tid=#{tid} and tcs.is_del=0 and tc.is_del=0
+    </select>
+    <!--删除教师授课及班级-->
+    <delete id="delTchCourse" parameterType="TchCourseVO">
+        delete tcs,tc from tch_course as tc left join tch_class as tcs on tcs.tcid=tc.tcid where tcs.tcsid=#{tcsid};
+    </delete>
+</mapper>

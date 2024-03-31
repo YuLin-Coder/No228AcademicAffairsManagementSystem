@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <meta charset="utf-8">
+    <title>教务管理系统</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" th:href="@{/static/admin/css/main.css}" media="all"/>
+</head>
+<style>
+    .myfooter {
+        width: 100%;
+        height: 25px;
+        overflow: hidden;
+        position: fixed;
+        left: 0;
+        bottom: 0;
+    }
+
+    .myfooter p {
+        display: block;
+        width: 100%;
+        height: 25px;
+        line-height: 25px;
+        text-align: center;
+        font-size: 0.8em;
+        color: #515151;
+    }
+
+</style>
+<body class="childrenBody">
+<div class="panel_box row" style="text-align: center;margin-top: 10em;">
+    <h1>欢迎
+        <shiro:principal property="nickName"/>
+        使用教务管理系统！
+    </h1>
+
+</div>
+<div class="myfooter">
+    <p>© 2019 <a href="http://ns.whn946.cn:8080" target="_blank">教务管理系统 </a>. All rights reserved.
+        Powered By 17Java05 <a href="http://www.miibeian.gov.cn" target="_blank">豫ICP备19031894号 </a></p>
+</div>
+
+</body>
+</html>

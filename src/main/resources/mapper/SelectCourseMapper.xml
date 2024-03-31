@@ -1,0 +1,50 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.SelectCourseMapper">
+   <!-- 查询开设课程 -->
+   <select id="sel" resultType="SelectCourseVo" parameterType="SelectCourseVo">
+       select a.cid,a.cname,a.ccredit,b.ctname,a.studytype,d.tname,
+       a.cselcount,a.cmaxcount,g.wname,
+       h.timeinterval,h.schname from
+       course a
+       INNER JOIN course_type b on a.ctid=b.ctid
+       INNER JOIN tch_course c on a.cid=c.cid
+       INNER JOIN teacher d on d.tid=c.tid
+       INNER JOIN weeks g on c.wid=g.wid
+       INNER JOIN schedule h on c.schid=h.schid
+       INNER JOIN major i on a.mid=i.mid
+       INNER JOIN grade j on i.mid=j.mid
+       INNER JOIN classinfo k on j.gid=k.gid
+       INNER JOIN student l on k.classid=l.classid
+       and l.stuid=#{stuid}
+       <where>
+           <if test="ctname != null and ctname !=''">
+               and  ctname =#{ctname}
+           </if>
+       </where>
+       and a.studytype='选修'
+       GROUP BY a.cname
+   </select>
+    <!-- 查询课程类型 -->
+   <select id="selType" resultType="CourseTypeDB">
+       SELECT ctname FROM course_type
+   </select>
+    <!-- 查询是否有该课程 -->
+    <select id="selCourse" parameterType="StuCourseDB" resultType="int">
+        SELECT count(*) FROM stu_course a where a.sid=#{sid} and a.cid=#{cid}
+    </select>
+    <!-- 查询课程所属学生的编号 -->
+    <select id="selStudentid" resultType="StudentDB" parameterType="StudentDB">
+        SELECT sid from student where stuid=#{stuid}
+    </select>
+    <!-- 学生选择课程 -->
+    <insert id="addCourse" parameterType="StuCourseDB">
+    insert into stu_course(sid,cid,is_del)VALUES(#{sid},#{cid},0)
+    </insert>
+    <!-- 改变已选课程数量-->
+    <update id="updateCount" parameterType="StuCourseDB">
+       update course set cselcount=cselcount+1 where cid=#{cid}
+    </update>
+</mapper>

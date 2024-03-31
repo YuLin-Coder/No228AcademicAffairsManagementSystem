@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>学生教评</title>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <script type="text/javascript" th:src="@{/static/js/marked.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/addnews.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/github-markdown.css}"/>
+
+
+</head>
+<style>
+    .layui-card {
+        box-shadow: #c0c0c0 0 1px 3px;
+    }
+</style>
+<body>
+
+
+<table id="tchlist" lay-filter="tmTable"></table>
+
+<div id="editDiv" style="display: none">
+
+    <form id="tmlist" class="layui-form" style="padding: 10px;">
+    </form>
+
+</div>
+</div>
+</body>
+
+</html>
+<script type="text/html" id="barBtn">
+    <a class="layui-btn layui-btn-sm" lay-event="edit">立即评价</a>
+</script>
+
+<script>
+    layui.use(['jquery', 'layer', 'form', 'table', 'laydate'], function () {
+        var $ = layui.$ //重点处
+            , layer = layui.layer
+            , form = layui.form
+            , table = layui.table
+            , layer = layui.layer
+            , laydate = layui.laydate;
+        //获取分页数据列表
+        table.render({
+            elem: '#tchlist'
+            , url: '/appraise/findalltch?stuid=20172005'
+            , cols: [
+                [
+                    {field: 'tname', title: '教师姓名'}
+                    , {field: 'tchid', title: '教评验证码'}
+                    , {field: 'cname', title: '教授课程'}
+                    , {fixed: 'right', title: '操作', toolbar: '#barBtn', width: 150}
+                ]
+            ]
+            , page: false
+            , even: true
+        });
+        //监听工具条
+        table.on('tool(tmTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'edit') {
+                var $ = layui.$;
+                //查询教评状态
+                $.ajax({
+                    type: 'post',
+                    url: '/appraise/selonestate',
+                    data: {
+                        tchid: data.tchid
+                    },
+                    success: function (statedata) {
+                        if (statedata == true) {
+                            layer.open({
+                                content: '已经教评过啦！',
+                                yes: function (index) {
+                                    layer.close(index);
+                                }
+                            });
+                        } else {
+                            //开始获取题目数据
+                            $.ajax({
+                                type: 'post',
+                                url: '/appraise/findalltm',
+                                data: {
+                                    page: 1,
+                                    limit: 100
+                                },
+                                success: function (tmdata) {
+                                    var result = tmdata.data;
+                                    var lists = '';
+                                    for (var i in result) {
+                                        lists += "<div class='layui-card'><div class='layui-card-header'>第" + adnum(i) + "题：</div><div class='layui-card-body'><div class='layui-form-item'>评价内容：" + result[i].elcontent + "</div><div class='layui-form-item'><div class='layui-input-block'><input type='radio' name='t" + i + "' value='5' title='很好'><input type='radio' name='t" + i + "' value='4' title='好'><input type='radio' name='t" + i + "' value='3' title='一般'><input type='radio' name='t" + i + "' value='2' title='较差'><input type='radio' name='t" + i + "' value='1' title='差'></div></div></div></div>";
+                                    }
+                                    function adnum(nums) {
+                                        nums++;
+                                        return nums;
+                                    }
+                                    $('#tmlist').html(lists);
+                                    form.render();
+                                    //弹出做题窗口
+                                    layer.open({
+                                        type: 1,
+                                        resize: false,
+                                        area: ['600px', '500px'],
+                                        title: '在线教评：' + data.tname + '老师',
+                                        content: $('#editDiv'),
+                                        btn: ['提交', '取消'],
+                                        yes: function (index) {
+                                            var sum = 0;
+                                            for (var i = 0;i < parseInt(tmdata.count);i++) {
+                                                var names='t'+i;
+                                                var ele = "input[name='"+ names + "']:checked";
+                                                var temps = parseInt($(ele).val());
+                                                console.log(names+':'+temps);
+                                                if (!isNaN(temps)){
+                                                    sum += temps;
+                                                }else {
+                                                    var err = i+1;
+                                                    layer.open({
+                                                        content: '第'+err+'题未做！',
+                                                        yes: function (index) {
+                                                            layer.close(index);
+                                                        }
+                                                    });
+                                                    return false;
+                                                }
+                                            }
+                                            layer.confirm('最终打分为'+ sum +'分，确定要提交吗？', function (index) {
+                                                $.ajax({
+                                                    type: 'post',
+                                                    url: '/appraise/addoneappraise',
+                                                    data: {
+                                                        tid:data.tchid,
+                                                        tchid:data.tchid,
+                                                        erexam:sum
+                                                    },
+                                                    success: function(data){
+                                                        if(data==true){
+                                                            layer.open({
+                                                                content: '教评成功！',
+                                                                yes: function(index){
+                                                                    layer.close(index);
+                                                                    window.location.reload();
+                                                                }
+                                                            });
+                                                        }else{
+                                                            layer.msg('提交失败，请稍后重试！');
+                                                        }
+                                                    }
+                                                });
+                                                layer.close(index);
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    });
+
+
+</script>

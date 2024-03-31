@@ -1,0 +1,46 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.AddTEacherMapper">
+
+    <!-- 添加教师 -->
+    <insert id="addTeacher" parameterType="teacherDB">
+        insert into teacher(tid,tchid,tname,tgender,tbirthday,pid,tnation,tcardid,tphone,taddress,entertime)
+        values(#{tid},#{tchid},#{tname},#{tgender},#{tbirthday},#{pid},#{tnation},#{tcardid},#{tphone},#{taddress},#{entertime})
+    </insert>
+    <!-- 判断是否要插入新一年分割工号 1要插入，0不用插入 -->
+    <select id="selectYear" resultType="int">
+        select case
+        when (select year(now()))&gt;(select substring((select max(tid) from teacher), 1, 4))
+        then year(now())
+        else 0
+        end
+    </select>
+    <!-- 添加一条分割线 -->
+    <insert id="teaSegmentation" parameterType="int">
+        insert into teacher
+          values((select  CAST((select concat(year(now()),'000')) AS UNSIGNED int)),(select  CAST((select concat(year(now()),'000')) AS UNSIGNED int)),
+          '年份过渡数据','年份过渡数据',NOW(),1,'年份过渡数据','年份过渡数据','年份过渡数据','年份过渡数据',now(),NOW(),1,1)
+    </insert>
+
+    <!-- 生成教师工号 -->
+    <select id="selTchid" resultType="String">
+      select max(tid)+1 from teacher
+    </select>
+
+    <!-- 根据教师工号查询信息 -->
+    <select id="selTeaMessage" resultType="TeacherDB">
+        select * from teacher where tchid = #{tchid}
+    </select>
+
+    <!-- 查询sys_role角色id -->
+    <select id="selectTeaRole" resultType="String">
+        select id from sys_role where name = '教师'
+    </select>
+
+    <!-- 查询教师数量 -->
+    <select id="selTeacherCount" resultType="int">
+        select count(*) from teacher
+    </select>
+</mapper>

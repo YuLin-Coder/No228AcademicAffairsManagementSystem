@@ -1,0 +1,27 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuanlrc.school.mapper.SelAllExamMapper">
+    <!--管理员查询学生成绩-->
+    <select id="selAllExam" resultType="map" parameterType="map">
+        select stu.sname,sex.*,cou.cname,cou.ccredit,concat(cty.ctname,'/',cou.studytype) type from
+        student stu,stu_exam sex,classinfo c,grade g,major m,department d,stu_course sco,course cou,course_type cty
+        where stu.sid = sex.sid and stu.classid = c.classid and c.gid = g.gid and g.mid = m.mid and m.did = d.did
+        and sco.sid = stu.sid and sex.scid=sco.scid and sco.cid = cou.cid and cou.mid = m.mid and stu.is_del =0 and cou.ctid = cty.ctid
+        <if test="classname != null">
+            and c.classname=#{classname}
+        </if>
+        <if test="gname != null">
+            and g.gname=#{gname}
+        </if>
+        <if test="mname != null">
+            and m.mname=#{mname}
+        </if>
+        <if test="dname != null">
+            and d.dname=#{dname}
+        </if>
+        <if test="stime != null">
+            and sex.stime=#{stime}
+        </if>
+    </select>
+</mapper>

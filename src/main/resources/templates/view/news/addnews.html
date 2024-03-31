@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>发布公示通知</title>
+    <script type="text/javascript" th:src="@{/static/js/jquery-3.1.1.js}"></script>
+    <script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+    <script type="text/javascript" th:src="@{/static/js/marked.js}"></script>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/layui/css/layui.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/addnews.css}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/github-markdown.css}"/>
+</head>
+<body>
+<div class="layui-row">
+    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+        <div class="layui-card">
+            <div class="layui-card-header">编辑区</div>
+            <div class="layui-card-body">
+                <form class="layui-form layui-form-pane">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">公示标题</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="ntitle" required  lay-verify="required" autocomplete="off" placeholder="请输入标题" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">发布部门</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="nauthor" required  lay-verify="required" placeholder="请输入发布部门/院系/人" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item layui-form-text">
+                        <label class="layui-form-label">公示内容</label>
+                        <div class="layui-input-block">
+                            <textarea name="ncontent" placeholder="请使用Markdown语法编写" id="readframe" class="layui-textarea" required  lay-verify="required"></textarea>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <button lay-submit lay-filter="subBtn" class="layui-btn layui-btn-fluid layui-btn-danger">立即发布</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-xs12 layui-col-sm6 layui-col-md6">
+        <div class="layui-card">
+            <div class="layui-card-header">预览区</div>
+            <div class="layui-card-body">
+                <div id="viewframe" class="markdown-body" style="display: block;width: 100%;height: 100%"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+<script>
+$("#readframe").on('keyup',function () {
+    $('#viewframe').html(marked($(this).val()));
+})
+
+layui.use(['form', 'layedit', 'laydate'], function(){
+    var form = layui.form
+        ,layer = layui.layer
+        ,layedit = layui.layedit
+        ,laydate = layui.laydate;
+    //监听提交
+    form.on('submit(subBtn)', function(data){
+        layui.use('jquery',function(){
+            var $=layui.$;
+            $.ajax({
+                type: 'post',
+                url: '/news/addingnews',
+                data: {
+                    ntitle:data.field.ntitle,
+                    nauthor:data.field.nauthor,
+                    ncontent:data.field.ncontent
+                },
+                success: function(data){
+                    if(data==true){
+                        layer.open({
+                            content: '已成功发布！',
+                            yes: function(index, layero){
+                                window.location.reload();
+                                layer.close(index);
+                            }
+                        });
+                    }else{
+                        layer.msg('发布失败，请稍后重试！');
+                    }
+                }
+            });
+        });
+        return false;//禁止跳转，否则会提交两次，且页面会刷新
+    });
+});
+</script>

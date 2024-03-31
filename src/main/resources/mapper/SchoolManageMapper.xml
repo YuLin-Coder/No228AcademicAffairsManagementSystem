@@ -1,0 +1,163 @@
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yuanlrc.school.mapper.SchoolManageMapper">
+<!--**************************************************************系部管理***********************************************************************-->
+    <!--查询全部系部-->
+    <select id="findAllDpm" resultType="SchoolManageVO">
+        select *
+        from  department d
+        <where>
+            d.is_del=0
+            <if test="dname != null">
+                and d.dname=#{dname}
+            </if>
+        </where>
+        order by d.did desc
+    </select>
+    <!--添加系部-->
+    <insert id="addOneDpm" parameterType="DepartmentDB">
+        insert into department(dname) values(#{dname})
+    </insert>
+    <!--编辑系部-->
+    <update id="editOneDpm" parameterType="DepartmentDB">
+        update department set dname=#{dname} where did=#{did}
+    </update>
+    <!--**************************************************************专业管理***********************************************************************-->
+    <!--查询全部专业-->
+    <select id="findAllMajor" resultType="SchoolManageVO">
+        select *
+        from  major m
+        inner join department d on m.did = d.did
+        <where>
+            m.is_del=0 and d.is_del=0
+            <if test="mname != null">
+                and m.mname=#{mname}
+            </if>
+            <if test="dname != null">
+                and d.dname=#{dname}
+            </if>
+        </where>
+        order by m.mid desc
+    </select>
+    <!--添加专业-->
+    <insert id="addOneMajor" parameterType="MajorDB">
+        insert into major(mname,did) values(#{mname},#{did})
+    </insert>
+    <!--编辑专业-->
+    <update id="editOneMajor" parameterType="MajorDB">
+        update major set mname=#{mname},did=#{did} where mid=#{mid}
+    </update>
+
+    <!--**************************************************************年级管理***********************************************************************-->
+    <!--查询全部年级-->
+    <select id="findAllGrade" resultType="SchoolManageVO">
+        select *
+        from  grade g
+        inner join major m on g.mid = m.mid
+        inner join department d on m.did = d.did
+        <where>
+            g.is_del=0 and m.is_del=0 and d.is_del=0
+            <if test="gname != null">
+                and g.gname=#{gname}
+            </if>
+            <if test="mname != null">
+                and m.mname=#{mname}
+            </if>
+            <if test="dname != null">
+                and d.dname=#{dname}
+            </if>
+        </where>
+        order by g.gid desc
+    </select>
+    <!--级联系部查询对应专业-->
+    <select id="jlSelMajor" resultType="SchoolManageVO">
+        select * from department d,major m where m.did=d.did and d.did=#{did}
+    </select>
+    <!--添加年级-->
+    <insert id="addOneGrade" parameterType="MajorDB">
+        insert into grade(gname,mid) values(#{gname},#{mid})
+    </insert>
+    <!--编辑年级-->
+    <update id="editOneGrade" parameterType="MajorDB">
+        update grade set gname=#{gname},mid=#{mid} where gid=#{gid}
+    </update>
+
+    <!--**************************************************************班级管理***********************************************************************-->
+    <!--查询全部班级-->
+    <select id="findAllClass" resultType="SchoolManageVO">
+        select *
+        from classinfo c
+        inner join grade g on c.gid = g.gid
+        inner join major m on g.mid = m.mid
+        inner join department d on m.did = d.did
+        <where>
+                c.is_del=0 and g.is_del=0 and m.is_del=0 and d.is_del=0
+                <if test="classname != null">
+                    and c.classname=#{classname}
+                </if>
+                <if test="gname != null">
+                    and g.gname=#{gname}
+                </if>
+                <if test="mname != null">
+                    and m.mname=#{mname}
+                </if>
+                <if test="dname != null">
+                    and d.dname=#{dname}
+                </if>
+        </where>
+        order by c.classid desc
+    </select>
+    <!--级联专业查询对应年级-->
+    <select id="jlSelGrade" resultType="SchoolManageVO">
+        select * from grade where mid=#{mid} and is_del=0
+    </select>
+    <!--添加班级-->
+    <insert id="addOneClass" parameterType="ClassinfoDB">
+        insert into classinfo(classname,gid) values(#{classname},#{gid})
+    </insert>
+    <!--编辑班级-->
+    <update id="editOneClass" parameterType="ClassinfoDB">
+        update classinfo set classname=#{classname},gid=#{gid} where classid=#{classid}
+    </update>
+
+    <!--**************************************************************条件查询***********************************************************************-->
+    <!--条件查询classname-->
+    <select id="tjSelClass" resultType="SchoolManageVO">
+        select classid,classname from classinfo where is_del=0 group by classname order by classid
+    </select>
+    <!--条件查询department-->
+    <select id="tjSelDpm" resultType="SchoolManageVO">
+        select did,dname from department where is_del=0 group by dname order by did
+    </select>
+    <!--条件查询major-->
+    <select id="tjSelMajor" resultType="SchoolManageVO">
+        select mid,mname from major where is_del=0
+        <if test="dname != null">
+            and did in(select did from department where dname=#{dname} and is_del=0)
+        </if>
+         group by mname order by mid
+    </select>
+    <!--条件查询grade-->
+    <select id="tjSelGrade" resultType="SchoolManageVO">
+        select gid,gname from grade where is_del=0
+        <if test="mname != null">
+            and mid in(select mid from major where mname=#{mname} and is_del=0)
+        </if>
+         group by gname order by gid
+    </select>
+    <!--**************************************************************重复验证***********************************************************************-->
+    <select id="checkOneDpm" resultType="Integer">
+        select count(*) from department where dname=#{dname}
+    </select>
+    <select id="checkOneMajor" resultType="Integer">
+        select count(*) from major where mname=#{mname} and did=#{did}
+    </select>
+    <select id="checkOneGrade" resultType="Integer">
+        select count(*) from grade where gname=#{gname} and mid=#{mid}
+    </select>
+    <select id="checkOneClass" resultType="Integer">
+        select count(*) from classinfo where classname=#{classname} and gid=#{gid}
+    </select>
+</mapper>
